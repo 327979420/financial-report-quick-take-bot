@@ -1,0 +1,30 @@
+{
+  "ticker": "MU",
+  "period": "Q4 FY26",
+  "verdict": "beat",
+  "guidance": "raised",
+  "revenue": {
+    "actual": "$11.32B",
+    "expected": "$10.95B",
+    "yoy": "+38%"
+  },
+  "eps": {
+    "basis": "Adj.",
+    "actual": "$3.21",
+    "expected": "$2.95"
+  },
+  "margins": {
+    "gross": "44.7%",
+    "operating": "36.2%"
+  },
+  "freeCashFlow": "$2.84B",
+  "balanceSheet": {
+    "label": "Net cash",
+    "value": "$1.40B"
+  },
+  "takeaways": [
+    "HBM revenue more than doubled as AI demand remained strong.",
+    "Gross margin expanded on improved pricing and product mix.",
+    "Management raised next-quarter revenue guidance."
+  ]
+}

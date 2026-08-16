@@ -1,0 +1,15 @@
+{
+  "name": "financial-report-quick-take-bot",
+  "version": "0.1.0",
+  "description": "Generate concise, Discord-ready financial report summaries.",
+  "type": "commonjs",
+  "main": "src/formatter.js",
+  "scripts": {
+    "demo": "node src/cli.js examples/micron-q4-fy26.json",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
