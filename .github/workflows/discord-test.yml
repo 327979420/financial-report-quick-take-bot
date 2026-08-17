@@ -1,0 +1,54 @@
+name: Send Discord test report
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-test-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      REPORT_MESSAGE: |-
+        📊 AMAT Q3 FY26 财报｜2026-08-13
+        结论：超预期｜指引上调
+
+        💰 营收：$9.12B，目标 $9.02B（同比 +25%） ✅ 高于目标
+        调整后 EPS：$3.50，目标 $3.39 ✅ 高于目标
+        毛利率：50.4%（调整后）
+        自由现金流：$2.33B（调整后）
+        📈 市场反应：次日股价下跌 5.1%；业绩虽超预期，但市场此前预期较高。
+
+        🔎 重点速览
+        • AI 基础设施需求推动先进逻辑、DRAM 和先进封装业务增长。
+        • 下一季度营收和 EPS 指引高于市场预期。
+        • 基本面强劲，但股价下跌说明利好可能已被提前计价。
+    steps:
+      - name: Confirm secret exists
+        shell: bash
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL is not configured"
+            exit 1
+          fi
+
+      - name: Send report to Discord
+        shell: bash
+        run: |
+          node -e '
+            const url = process.env.DISCORD_WEBHOOK_URL;
+            const content = process.env.REPORT_MESSAGE;
+            fetch(url, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ content, allowed_mentions: { parse: [] } })
+            }).then(async (response) => {
+              if (!response.ok) {
+                throw new Error(`Discord returned HTTP ${response.status}`);
+              }
+              console.log("Discord test report sent successfully");
+            });
+          '
