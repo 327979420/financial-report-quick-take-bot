@@ -1,0 +1,41 @@
+name: Publish verified Discord report
+
+on:
+  workflow_dispatch:
+    inputs:
+      message_b64:
+        description: Base64-encoded verified Chinese report
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      MESSAGE_B64: ${{ inputs.message_b64 }}
+    steps:
+      - name: Validate and publish
+        shell: bash
+        run: |
+          node -e '
+            const url = process.env.DISCORD_WEBHOOK_URL;
+            if (!url) throw new Error("DISCORD_WEBHOOK_URL is not configured");
+
+            const content = Buffer.from(process.env.MESSAGE_B64, "base64").toString("utf8");
+            if (!content.trim()) throw new Error("Report message is empty");
+            if (content.length > 2000) throw new Error("Report exceeds Discord 2000-character limit");
+
+            fetch(url, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ content, allowed_mentions: { parse: [] } })
+            }).then((response) => {
+              if (!response.ok) throw new Error(`Discord returned HTTP ${response.status}`);
+              console.log("Verified report published successfully");
+            });
+          '
