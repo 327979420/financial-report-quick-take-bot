@@ -1,14 +1,14 @@
 # Financial Report Quick Take Bot
 
-A portfolio-ready prototype that turns structured earnings data into compact Discord-ready summaries.
+**Turn an earnings report into the numbers worth reading first.**
 
-The bot is designed for people who want the important numbers at a glance—not a long research report. It focuses on popular technology, AI infrastructure, memory-semiconductor, and crypto-linked stocks.
+A compact earnings briefing for me and my Discord group, so we can review the key figures before digging into a full release or filing.
 
 ## Example output
 
-```text
-📊 MU Q4 FY26 — BEAT | Guidance raised
+Excerpt generated from the included [MU sample input](examples/micron-q4-fy26.json). **These figures are illustrative, not verified earnings results.** The supplied verdict is BEAT and guidance is raised.
 
+```text
 Revenue: $11.32B vs $10.95B expected (+38% YoY)
 Adj. EPS: $3.21 vs $2.95 expected
 Gross margin: 44.7% | Operating margin: 36.2%
@@ -20,56 +20,28 @@ Quick takeaways
 • Management raised next-quarter revenue guidance.
 ```
 
-## What it includes
+## What it captures
 
-- A focused, tiered stock watchlist
-- Beat, mixed, or miss classification
-- Guidance direction
-- Revenue and EPS versus expectations
-- Margins, free cash flow, and balance-sheet position
-- Up to three quick takeaways
-- Discord-safe output kept below a configurable character limit
-- Automated tests using Node's built-in test runner
+Revenue and EPS against expectations, margins, free cash flow, balance-sheet position, and guidance direction, followed by up to three takeaways. The output stays within a configurable character limit for easy sharing in Discord.
+
+## From report to quick take
+
+**Report → supplied key metrics → beat/miss verdict → guidance → takeaways → Discord-ready briefing**
+
+The current formatter validates structured JSON and presents the supplied figures, verdict, and takeaways. It does not independently extract metrics, calculate surprises, or decide whether a company beat expectations.
+
+A separate [manual publishing workflow](.github/workflows/publish-report.yml) can send a prepared message through a Discord webhook. Live filing ingestion and automatic metric verification are not implemented. Those are the next steps, alongside an earnings calendar.
 
 ## Run locally
 
-Requires Node.js 20 or newer. No packages need to be installed.
+Requires Node.js 20+. No packages to install.
 
 ```bash
 npm run demo
 npm test
-```
-
-To format another report:
-
-```bash
 node src/cli.js path/to/report.json
 ```
 
-## Input format
+Use the sample JSON as the input template. Financial values are display strings, avoiding extra rounding by the formatter. For manual delivery, configure the repository secret `DISCORD_WEBHOOK_URL`; the workflow takes a base64-encoded message prepared and verified by the operator.
 
-See [`examples/micron-q4-fy26.json`](examples/micron-q4-fy26.json). Financial values are supplied as display strings so the formatter does not introduce rounding or currency errors.
-
-## Project structure
-
-```text
-config/watchlist.json       Stocks and themes to monitor
-examples/                   Sample structured earnings data
-src/formatter.js            Summary validation and formatting
-src/cli.js                  Command-line interface
-test/formatter.test.js      Automated tests
-outputs/                    Editorial and watchlist design notes
-```
-
-## Roadmap
-
-- Ingest primary-source earnings releases and filings
-- Extract and validate financial metrics
-- Send summaries through a Discord webhook
-- Add an earnings calendar and weekly radar
-- Add presentation-quality Discord embeds
-
-## Disclaimer
-
-This project provides informational summaries only and is not financial advice. The included report is illustrative sample data, not a live investment report.
-
+For information and discussion, not investment advice.
