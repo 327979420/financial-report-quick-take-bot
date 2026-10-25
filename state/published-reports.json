@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "notBefore": "2026-10-26T00:00:00Z",
+  "reports": [
+    {
+      "ticker": "AMAT",
+      "period": "Q3 FY26",
+      "reportDate": "2026-08-13",
+      "status": "test-published",
+      "workflowRun": "31981085257"
+    },
+    {
+      "ticker": "NVDA",
+      "period": "Q2 FY27",
+      "reportDate": "2026-08-26",
+      "status": "published",
+      "workflowRun": "33022599831"
+    },
+    {
+      "ticker": "CRM",
+      "period": "Q2 FY27",
+      "reportDate": "2026-08-26",
+      "status": "published",
+      "workflowRun": "33022640001"
+    },
+    {
+      "ticker": "CRWD",
+      "period": "Q2 FY27",
+      "reportDate": "2026-08-26",
+      "status": "published",
+      "workflowRun": "33022675688"
+    },
+    {
+      "ticker": "MRVL",
+      "period": "Q2 FY27",
+      "reportDate": "2026-08-27",
+      "status": "published",
+      "workflowRun": "33124749149"
+    },
+    {
+      "ticker": "DELL",
+      "period": "Q2 FY27",
+      "reportDate": "2026-09-01",
+      "status": "published",
+      "workflowRun": "33573315927"
+    },
+    {
+      "ticker": "AVGO",
+      "period": "Q3 FY26",
+      "reportDate": "2026-09-02",
+      "status": "published",
+      "workflowRun": "33693146571"
+    },
+    {
+      "ticker": "SNOW",
+      "period": "Q2 FY27",
+      "reportDate": "2026-09-02",
+      "status": "published",
+      "workflowRun": "33758834029"
+    },
+    {
+      "ticker": "GME",
+      "period": "Q2 FY26",
+      "reportDate": "2026-09-08",
+      "status": "published",
+      "workflowRun": "34354800342"
+    },
+    {
+      "ticker": "ORCL",
+      "period": "Q1 FY27",
+      "reportDate": "2026-09-10",
+      "status": "published",
+      "workflowRun": "34540306859"
+    },
+    {
+      "ticker": "ADBE",
+      "period": "Q3 FY26",
+      "reportDate": "2026-09-10",
+      "status": "published",
+      "workflowRun": "34540309917"
+    }
+  ]
+}

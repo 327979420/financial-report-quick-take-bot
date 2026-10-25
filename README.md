@@ -24,24 +24,34 @@ Quick takeaways
 
 Revenue and EPS against expectations, margins, free cash flow, balance-sheet position, and guidance direction, followed by up to three takeaways. The output stays within a configurable character limit for easy sharing in Discord.
 
-## From report to quick take
+## How it runs
 
-**Report → supplied key metrics → beat/miss verdict → guidance → takeaways → Discord-ready briefing**
+**New filing on SEC EDGAR → Claude reads the release and checks consensus → automatic checks → Discord**
 
-The current formatter validates structured JSON and presents the supplied figures, verdict, and takeaways. It does not independently extract metrics, calculate surprises, or decide whether a company beat expectations.
+A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on US trading days. It looks for new earnings releases (8-K item 2.02, or 6-K results for foreign issuers) from every company in the [watchlist](config/watchlist.json), then:
 
-A separate [manual publishing workflow](.github/workflows/publish-report.yml) can send a prepared message through a Discord webhook. Live filing ingestion and automatic metric verification are not implemented. Those are the next steps, alongside an earnings calendar.
+1. Reads the press release straight from the filing.
+2. Asks Claude to write the Chinese briefing, looking up the analyst consensus and any real after-hours move on the web.
+3. Blocks the post unless revenue and EPS can be quoted from the release, every target and price move links to a source that was actually found, and the message fits in 1,700 characters. When only company guidance is available, the message must say so.
+4. Posts to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
+
+A blocked report fails the run (GitHub emails the owner) and is not retried. Korean listings (SK hynix, Samsung) are not on EDGAR and are skipped for now.
+
+To test, run **Check for new earnings** from the Actions tab. It defaults to a dry run that prints the draft without posting. `accession` processes one specific filing.
+
+Needs two repository secrets: `ANTHROPIC_API_KEY` and `DISCORD_WEBHOOK_URL`. The model defaults to Claude Opus 5.5 and can be changed with the `MODEL` environment variable.
 
 ## Run locally
 
-Requires Node.js 20+. No packages to install.
+Requires Node.js 22.
 
 ```bash
-npm run demo
+npm ci
 npm test
-node src/cli.js path/to/report.json
+node scripts/check-earnings.js --detect-only --since 2026-10-20T00:00:00Z
+ANTHROPIC_API_KEY=... node scripts/check-earnings.js --dry-run --accession <accession number>
 ```
 
-Use the sample JSON as the input template. Financial values are display strings, avoiding extra rounding by the formatter. For manual delivery, configure the repository secret `DISCORD_WEBHOOK_URL`; the workflow takes a base64-encoded message prepared and verified by the operator.
+The original JSON formatter still works for hand-made summaries (`npm run demo`), and the [manual publishing workflow](.github/workflows/publish-report.yml) can send a prepared message.
 
 For information and discussion, not investment advice.
