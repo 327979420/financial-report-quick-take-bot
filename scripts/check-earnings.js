@@ -94,7 +94,7 @@ async function processCandidate(candidate, args, state) {
   const record = (fields) => state.reports.push({ ticker, accession: filing.accession, form: filing.form, recordedAt: new Date().toISOString(), ...fields });
 
   const release = await sec.releaseText(candidate.cik, filing);
-  if (filing.form === "6-K" && !sec.looksLikeResults(release.text)) {
+  if (filing.form === "6-K" && !release.texts.some(sec.looksLikeResults)) {
     console.log(`${label}: not an earnings release, skipped`);
     record({ status: "skipped", reason: "6-K without quarterly results" });
     return "skipped";

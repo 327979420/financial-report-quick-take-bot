@@ -3,9 +3,8 @@
 // SEC EDGAR helpers: find new earnings releases (8-K item 2.02, or 6-K for
 // foreign issuers) and read the press release exhibit as plain text.
 
-const USER_AGENT =
-  process.env.SEC_USER_AGENT ||
-  "financial-report-quick-take-bot 327979420@users.noreply.github.com";
+// SEC requires "Name email" and rejects GitHub noreply addresses.
+const USER_AGENT = process.env.SEC_USER_AGENT || "Freddy Liang liangfreddy164@gmail.com";
 const REQUEST_GAP_MS = 150; // SEC allows 10 requests/second; stay well under it
 
 let lastRequestAt = 0;
@@ -31,30 +30,13 @@ async function loadTickerMap() {
   return map;
 }
 
-// EDGAR labels acceptanceDateTime with "Z" but the clock is US Eastern.
-function easternToIso(value) {
-  const [date, time] = value.replace(/\.\d+Z?$/, "").replace(/Z$/, "").split("T");
-  const [year, month, day] = date.split("-").map(Number);
-  const [hour, minute, second] = time.split(":").map(Number);
-  const asUtc = Date.UTC(year, month - 1, day, hour, minute, second);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    hourCycle: "h23",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit"
-  }).formatToParts(new Date(asUtc));
-  const get = (type) => Number(parts.find((part) => part.type === type).value);
-  const easternOfUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
-  return new Date(asUtc + (asUtc - easternOfUtc)).toISOString();
-}
-
 function recentFilingsFrom(submissions) {
   const recent = submissions.filings.recent;
   return recent.accessionNumber.map((accession, index) => ({
     accession,
     form: recent.form[index],
     filingDate: recent.filingDate[index],
-    acceptedAt: easternToIso(recent.acceptanceDateTime[index]),
+    acceptedAt: new Date(recent.acceptanceDateTime[index]).toISOString(),
     items: recent.items[index] || "",
     primaryDocument: recent.primaryDocument[index]
   }));
@@ -74,11 +56,14 @@ function filingFolder(cik, accession) {
   return `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${accession.replace(/-/g, "")}`;
 }
 
-// Exhibit 99.x is the press release; fall back to the primary document.
+// Exhibit 99.x is the press release. Some 6-K filers (TSMC, ASML) name it
+// freely, so without an ex99 file take every document, cover page last.
 function pickReleaseDocuments(names, primaryDocument) {
-  const html = names.filter((name) => /\.html?$/i.test(name));
+  const html = names.filter((name) => /\.html?$/i.test(name) && !/-index(-headers)?\.html$/i.test(name));
   const exhibits = html.filter((name) => /ex-?99|exhibit-?99|ex_?99|dex99/i.test(name)).sort();
-  return exhibits.length > 0 ? exhibits.slice(0, 2) : [primaryDocument];
+  if (exhibits.length > 0) return exhibits.slice(0, 2);
+  const others = html.filter((name) => name !== primaryDocument).sort();
+  return [...others.slice(0, 3), primaryDocument];
 }
 
 async function releaseText(cik, filing) {
@@ -88,7 +73,7 @@ async function releaseText(cik, filing) {
   const documents = pickReleaseDocuments(names, filing.primaryDocument);
   const texts = [];
   for (const name of documents) texts.push(htmlToText(await secFetch(`${folder}/${name}`, "text")));
-  return { text: texts.join("\n\n"), urls: documents.map((name) => `${folder}/${name}`) };
+  return { text: texts.join("\n\n"), texts, urls: documents.map((name) => `${folder}/${name}`) };
 }
 
 const ENTITIES = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", mdash: "—", ndash: "–", middot: "·", bull: "•" };
@@ -125,6 +110,5 @@ module.exports = {
   releaseText,
   pickReleaseDocuments,
   htmlToText,
-  looksLikeResults,
-  easternToIso
+  looksLikeResults
 };

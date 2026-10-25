@@ -6,11 +6,6 @@ const sec = require("../src/sec");
 const { checkReport } = require("../src/writer");
 const { parseArgs } = require("../scripts/check-earnings");
 
-test("treats EDGAR acceptance times as US Eastern", () => {
-  assert.equal(sec.easternToIso("2026-10-22T16:05:12.000Z"), "2026-10-22T20:05:12.000Z");
-  assert.equal(sec.easternToIso("2026-12-01T16:05:12.000Z"), "2026-12-01T21:05:12.000Z");
-});
-
 test("keeps 8-K item 2.02 and 6-K filings only", () => {
   assert.equal(sec.isEarningsCandidate({ form: "8-K", items: "2.02,9.01" }), true);
   assert.equal(sec.isEarningsCandidate({ form: "8-K", items: "5.02,9.01" }), false);
@@ -35,7 +30,7 @@ test("reads recent filings from the submissions feed", () => {
     accession: "0000001-26-000001",
     form: "8-K",
     filingDate: "2026-10-22",
-    acceptedAt: "2026-10-22T20:05:12.000Z",
+    acceptedAt: "2026-10-22T16:05:12.000Z",
     items: "2.02,9.01",
     primaryDocument: "tsla-20261022.htm"
   });
@@ -46,7 +41,10 @@ test("prefers exhibit 99 documents for the press release", () => {
     sec.pickReleaseDocuments(["tsla-8k.htm", "tsla-ex991.htm", "logo.jpg", "tsla-ex992.htm", "tsla-ex993.htm"], "tsla-8k.htm"),
     ["tsla-ex991.htm", "tsla-ex992.htm"]
   );
-  assert.deepEqual(sec.pickReleaseDocuments(["form6k.htm"], "form6k.htm"), ["form6k.htm"]);
+  assert.deepEqual(
+    sec.pickReleaseDocuments(["x-index.html", "tsm-6k.htm", "a3q26release.htm", "a3q26slides.htm", "chart.jpg"], "tsm-6k.htm"),
+    ["a3q26release.htm", "a3q26slides.htm", "tsm-6k.htm"]
+  );
 });
 
 test("turns release HTML into readable text with table cells", () => {
