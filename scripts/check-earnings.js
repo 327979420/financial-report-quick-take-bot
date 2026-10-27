@@ -2,14 +2,14 @@
 "use strict";
 
 // Scheduled earnings check. Finds new earnings filings for the watchlist on
-// SEC EDGAR, has Claude draft and source a Chinese briefing, verifies it, and
+// SEC EDGAR, has an OpenAI model draft and source a Chinese briefing, verifies it, and
 // posts it to Discord. State lives in state/published-reports.json.
 //
 //   node scripts/check-earnings.js [--dry-run] [--detect-only]
 //     [--since ISO] [--ticker TSLA] [--accession 0001628280-26-012345]
 //
 // --dry-run      draft and print, but do not post or write state
-// --detect-only  list candidate filings only (no Claude call)
+// --detect-only  list candidate filings only (no model call)
 // --since        look back to this time instead of the normal window
 // --accession    process exactly this filing, even if already handled
 

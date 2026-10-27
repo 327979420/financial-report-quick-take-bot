@@ -53,15 +53,24 @@ jobs:
       - run: npm ci
       - run: npm test
 
-      # Pull requests only confirm that SEC detection works; no Claude call, no post.
+      # Pull requests only confirm that SEC detection works; no model call, no post.
       - name: Detect filings (pull request)
         if: github.event_name == 'pull_request'
         run: node scripts/check-earnings.js --detect-only --since "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)"
 
+      # TEMPORARY: one dry run on Tesla's Q3 filing. No Discord secret is passed. Remove before merging.
+      - name: Tesla dry run (temporary)
+        if: github.event_name == 'pull_request'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then echo "OPENAI_API_KEY is not set; skipping"; exit 0; fi
+          node scripts/check-earnings.js --dry-run --ticker TSLA --accession 0001628280-26-066738
+
       - name: Check, draft and publish
         if: github.event_name != 'pull_request'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           SINCE: ${{ inputs.since }}

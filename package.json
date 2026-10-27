@@ -13,6 +13,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "0.133.0"
+    "openai": "7.32.0"
   }
 }

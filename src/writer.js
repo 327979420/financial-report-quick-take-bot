@@ -1,16 +1,15 @@
 "use strict";
 
 // Turns one earnings press release into a verified Chinese Discord briefing.
-// Claude reads the release, looks up consensus and market reaction on the web,
-// and returns the result through the submit_report tool. checkReport() then
-// rejects anything whose figures or sources cannot be traced.
+// The model reads the release, looks up consensus and market reaction with
+// OpenAI web search, and returns structured JSON. checkReport() then rejects
+// anything whose figures or sources cannot be traced.
 
-const Anthropic = require("@anthropic-ai/sdk");
+const OpenAI = require("openai");
 
-const MODEL = process.env.MODEL || "claude-opus-5-5";
+const MODEL = process.env.MODEL || "gpt-6-astra";
 const EFFORT = process.env.EFFORT || "high";
 const MAX_MESSAGE_LENGTH = 1700;
-const MAX_TURNS = 8;
 
 const STYLE_EXAMPLE = `🟡 Broadcom（AVGO）Q3 FY26 财报速览｜2026-09-02
 
@@ -42,7 +41,7 @@ The message must be at most ${MAX_MESSAGE_LENGTH} characters, in simplified Chin
 
 ${STYLE_EXAMPLE}
 
-When you are done, call submit_report exactly once. If the filing is not a quarterly or annual earnings release (for example monthly sales, a shareholder meeting notice, or an acquisition), call submit_report with is_earnings_release false and a short skip_reason, leaving the other fields empty.`;
+Return the result as JSON. List in consensus_sources and market_reaction_source only URLs you actually opened or found in this session. If the filing is not a quarterly or annual earnings release (for example monthly sales, a shareholder meeting notice, or an acquisition), set is_earnings_release false with a short skip_reason and leave the other fields empty.`;
 
 const metric = {
   type: "object",
@@ -57,51 +56,46 @@ const metric = {
   additionalProperties: false
 };
 
-const SUBMIT_TOOL = {
-  name: "submit_report",
-  description: "Submit the finished earnings briefing, or report that this filing is not an earnings release.",
-  strict: true,
-  input_schema: {
-    type: "object",
-    properties: {
-      is_earnings_release: { type: "boolean" },
-      skip_reason: { type: "string" },
-      company_name: { type: "string" },
-      ticker: { type: "string" },
-      period: { type: "string", description: "Fiscal period, e.g. Q3 FY26" },
-      report_date: { type: "string", description: "Release date, YYYY-MM-DD" },
-      revenue: metric,
-      eps: metric,
-      market_reaction: { type: "string", description: "The reaction line as written in the message, or empty" },
-      market_reaction_source: { type: "string", description: "URL that reports the price move, or empty" },
-      conflicts: { type: "array", items: { type: "string" } },
-      message: { type: "string" }
-    },
-    required: [
-      "is_earnings_release", "skip_reason", "company_name", "ticker", "period", "report_date",
-      "revenue", "eps", "market_reaction", "market_reaction_source", "conflicts", "message"
-    ],
-    additionalProperties: false
-  }
+const REPORT_SCHEMA = {
+  type: "object",
+  properties: {
+    is_earnings_release: { type: "boolean" },
+    skip_reason: { type: "string" },
+    company_name: { type: "string" },
+    ticker: { type: "string" },
+    period: { type: "string", description: "Fiscal period, e.g. Q3 FY26" },
+    report_date: { type: "string", description: "Release date, YYYY-MM-DD" },
+    revenue: metric,
+    eps: metric,
+    market_reaction: { type: "string", description: "The reaction line as written in the message, or empty" },
+    market_reaction_source: { type: "string", description: "URL that reports the price move, or empty" },
+    conflicts: { type: "array", items: { type: "string" } },
+    message: { type: "string" }
+  },
+  required: [
+    "is_earnings_release", "skip_reason", "company_name", "ticker", "period", "report_date",
+    "revenue", "eps", "market_reaction", "market_reaction_source", "conflicts", "message"
+  ],
+  additionalProperties: false
 };
 
-const TOOLS = [
-  { type: "web_search_20260209", name: "web_search", max_uses: 8 },
-  { type: "web_fetch_20260209", name: "web_fetch", max_uses: 4 },
-  SUBMIT_TOOL
-];
-
-function collectUrls(content, seen) {
-  for (const block of content) {
-    if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
-      for (const result of block.content) if (result.url) seen.add(result.url);
+// Every URL the model searched, opened or cited, so sources can be checked.
+function collectUrls(output, seen) {
+  for (const item of output) {
+    if (item.type === "web_search_call") {
+      for (const source of item.action?.sources ?? []) seen.add(source.url);
+      if (item.action?.url) seen.add(item.action.url);
     }
-    if (block.type === "web_fetch_tool_result" && block.content?.url) seen.add(block.content.url);
+    if (item.type === "message") {
+      for (const part of item.content ?? []) {
+        for (const note of part.annotations ?? []) if (note.type === "url_citation") seen.add(note.url);
+      }
+    }
   }
 }
 
-async function draftReport({ ticker, companyName, filing, release }, client = new Anthropic({ timeout: 10 * 60 * 1000 })) {
-  const prompt = [
+async function draftReport({ ticker, companyName, filing, release }, client = new OpenAI({ timeout: 15 * 60 * 1000 })) {
+  const input = [
     `Ticker: ${ticker}`,
     `Company: ${companyName}`,
     `SEC form ${filing.form}, accepted ${filing.acceptedAt}`,
@@ -112,37 +106,32 @@ async function draftReport({ ticker, companyName, filing, release }, client = ne
     "</release>"
   ].join("\n");
 
-  const messages = [{ role: "user", content: prompt }];
-  const seenUrls = new Set(release.urls);
-  const usage = { input: 0, output: 0, searches: 0 };
+  const response = await client.responses.create({
+    model: MODEL,
+    instructions: SYSTEM,
+    input,
+    tools: [{ type: "web_search" }],
+    include: ["web_search_call.action.sources"],
+    reasoning: { effort: EFFORT },
+    text: { format: { type: "json_schema", name: "earnings_report", strict: true, schema: REPORT_SCHEMA } },
+    max_output_tokens: 32000,
+    store: false
+  });
 
-  for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const response = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: EFFORT },
-      system: SYSTEM,
-      tools: TOOLS,
-      messages
-    });
-    usage.input += response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0);
-    usage.output += response.usage.output_tokens;
-    usage.searches += response.usage.server_tool_use?.web_search_requests ?? 0;
-    collectUrls(response.content, seenUrls);
-
-    if (response.stop_reason === "refusal") throw new Error(`Claude declined: ${response.stop_details?.category ?? "unknown"}`);
-
-    const submit = response.content.find((block) => block.type === "tool_use" && block.name === "submit_report");
-    if (submit) return { report: submit.input, seenUrls, usage };
-
-    messages.push({ role: "assistant", content: response.content });
-    if (response.stop_reason === "pause_turn") continue;
-    if (response.stop_reason === "max_tokens") throw new Error("Claude ran out of output tokens");
-    messages.push({ role: "user", content: "Call submit_report now with your finished result." });
+  if (response.status !== "completed") {
+    throw new Error(`OpenAI response ${response.status}: ${response.incomplete_details?.reason ?? response.error?.message ?? "unknown"}`);
   }
-  throw new Error(`No submit_report after ${MAX_TURNS} turns`);
+  const refusal = response.output.flatMap((item) => item.content ?? []).find((part) => part.type === "refusal");
+  if (refusal) throw new Error(`Model refused: ${refusal.refusal}`);
+
+  const seenUrls = new Set(release.urls);
+  collectUrls(response.output, seenUrls);
+  const usage = {
+    input: response.usage?.input_tokens ?? 0,
+    output: response.usage?.output_tokens ?? 0,
+    searches: response.output.filter((item) => item.type === "web_search_call").length
+  };
+  return { report: JSON.parse(response.output_text), seenUrls, usage };
 }
 
 const squash = (text) => text.replace(/\s+/g, " ").trim().toLowerCase();
