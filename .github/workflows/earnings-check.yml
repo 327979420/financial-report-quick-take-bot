@@ -63,6 +63,7 @@ jobs:
         run: |
           CLEAN=$(printf '%s' "$RAW" | tr -d '[:space:]')
           if [ -n "$CLEAN" ]; then echo "::add-mask::$CLEAN"; echo "CLAUDE_CODE_OAUTH_TOKEN=$CLEAN" >> "$GITHUB_ENV"; fi
+          echo "TEMP DEBUG token length ${#CLEAN}, prefix ${CLEAN:0:13}"
 
       # Pull requests only confirm that SEC detection works; no Claude call, no post.
       - name: Detect filings (pull request)
