@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const sec = require("../src/sec");
-const { checkReport } = require("../src/writer");
+const { checkReport, parseStream } = require("../src/writer");
 const { parseArgs } = require("../scripts/check-earnings");
 
 test("keeps 8-K item 2.02 and 6-K filings only", () => {
@@ -117,4 +117,22 @@ test("treats empty workflow inputs as unset", () => {
   assert.deepEqual(parseArgs(["--dry-run", "--since", "", "--ticker", "tsla", "--accession", ""]), {
     dryRun: true, detectOnly: false, since: null, ticker: "TSLA", accession: null
   });
+});
+
+test("reads the report, sources and cost from Claude Code stream-json", () => {
+  const lines = [
+    { type: "assistant", message: { content: [{ type: "tool_use", name: "WebSearch", input: { query: "TSLA Q3 estimate" } }] } },
+    { type: "user", message: { content: [{ type: "tool_result", content: 'Links: [{"title":"Tesla Q3","url":"https://www.reuters.com/tesla-q3"}]' }] } },
+    { type: "assistant", message: { content: [{ type: "tool_use", name: "WebFetch", input: { url: "https://www.cnbc.com/tesla" } }] } },
+    { type: "result", is_error: false, num_turns: 4, total_cost_usd: 0.42, structured_output: { ticker: "TSLA" }, result: "" }
+  ];
+  const { report, seenUrls, usage } = parseStream(lines.map((line) => JSON.stringify(line)).join("\n"));
+  assert.deepEqual(report, { ticker: "TSLA" });
+  assert.deepEqual([...seenUrls].sort(), ["https://www.cnbc.com/tesla", "https://www.reuters.com/tesla-q3"]);
+  assert.deepEqual(usage, { costUsd: 0.42, turns: 4, searches: 1 });
+});
+
+test("surfaces a failed Claude Code run", () => {
+  const line = JSON.stringify({ type: "result", is_error: true, subtype: "success", result: "Not logged in" });
+  assert.throws(() => parseStream(line), /Claude Code failed: Not logged in/);
 });

@@ -11,8 +11,5 @@
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT",
-  "dependencies": {
-    "openai": "7.32.0"
-  }
+  "license": "MIT"
 }

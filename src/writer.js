@@ -1,14 +1,17 @@
 "use strict";
 
 // Turns one earnings press release into a verified Chinese Discord briefing.
-// The model reads the release, looks up consensus and market reaction with
-// OpenAI web search, and returns structured JSON. checkReport() then rejects
-// anything whose figures or sources cannot be traced.
+// Headless Claude Code (signed in with CLAUDE_CODE_OAUTH_TOKEN) reads the
+// release, looks up consensus and market reaction with WebSearch/WebFetch,
+// and returns JSON matching REPORT_SCHEMA. checkReport() then rejects anything
+// whose figures or sources cannot be traced.
 
-const OpenAI = require("openai");
+const { spawn } = require("node:child_process");
 
-const MODEL = process.env.MODEL || "gpt-6-astra";
-const EFFORT = process.env.EFFORT || "high";
+const MODEL = process.env.MODEL || "opus";
+const CLAUDE_BIN = process.env.CLAUDE_BIN || "claude";
+const MAX_TURNS = 40;
+const TIMEOUT_MS = 20 * 60 * 1000;
 const MAX_MESSAGE_LENGTH = 1700;
 
 const STYLE_EXAMPLE = `🟡 Broadcom（AVGO）Q3 FY26 财报速览｜2026-09-02
@@ -79,23 +82,80 @@ const REPORT_SCHEMA = {
   additionalProperties: false
 };
 
-// Every URL the model searched, opened or cited, so sources can be checked.
-function collectUrls(output, seen) {
-  for (const item of output) {
-    if (item.type === "web_search_call") {
-      for (const source of item.action?.sources ?? []) seen.add(source.url);
-      if (item.action?.url) seen.add(item.action.url);
+const URL_PATTERN = /https?:\/\/[^\s"'<>()\[\]{}\\]+/g;
+
+// Reads Claude Code's stream-json output: every URL that appeared in a
+// WebSearch/WebFetch result or WebFetch request, the final JSON, and usage.
+function parseStream(stdout) {
+  const seenUrls = new Set();
+  const usage = { costUsd: 0, turns: 0, searches: 0 };
+  let result = null;
+
+  for (const line of stdout.split("\n")) {
+    if (!line.trim()) continue;
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      continue;
     }
-    if (item.type === "message") {
-      for (const part of item.content ?? []) {
-        for (const note of part.annotations ?? []) if (note.type === "url_citation") seen.add(note.url);
+    const content = Array.isArray(event.message?.content) ? event.message.content : [];
+    if (event.type === "assistant") {
+      for (const block of content) {
+        if (block.type !== "tool_use") continue;
+        if (block.name === "WebSearch") usage.searches++;
+        if (block.name === "WebFetch" && block.input?.url) seenUrls.add(block.input.url);
       }
     }
+    if (event.type === "user") {
+      for (const block of content) {
+        if (block.type !== "tool_result") continue;
+        for (const url of JSON.stringify(block.content ?? "").match(URL_PATTERN) ?? []) seenUrls.add(url.replace(/[.,;]+$/, ""));
+      }
+    }
+    if (event.type === "result") result = event;
   }
+
+  if (!result) throw new Error("Claude Code produced no result");
+  if (result.is_error) throw new Error(`Claude Code failed: ${result.result || result.subtype}`);
+  usage.costUsd = result.total_cost_usd ?? 0;
+  usage.turns = result.num_turns ?? 0;
+  const report = result.structured_output ?? JSON.parse(result.result);
+  return { report, seenUrls, usage };
 }
 
-async function draftReport({ ticker, companyName, filing, release }, client = new OpenAI({ timeout: 15 * 60 * 1000 })) {
-  const input = [
+function runClaude(prompt) {
+  const args = [
+    "-p",
+    "--model", MODEL,
+    "--output-format", "stream-json",
+    "--verbose",
+    "--max-turns", String(MAX_TURNS),
+    "--system-prompt", SYSTEM,
+    "--tools", "WebSearch,WebFetch",
+    "--allowedTools", "WebSearch,WebFetch",
+    "--json-schema", JSON.stringify(REPORT_SCHEMA)
+  ];
+  return new Promise((resolve, reject) => {
+    const child = spawn(CLAUDE_BIN, args, { stdio: ["pipe", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => child.kill("SIGTERM"), TIMEOUT_MS);
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    child.stderr.on("data", (chunk) => (stderr += chunk));
+    child.on("error", reject);
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      // A failed run still writes a result event; let parseStream report it.
+      if (!stdout.trim()) reject(new Error(`claude exited ${code}: ${stderr.trim().slice(0, 500)}`));
+      else resolve(stdout);
+    });
+    child.stdin.end(prompt);
+  });
+}
+
+async function draftReport({ ticker, companyName, filing, release }) {
+  const prompt = [
     `Ticker: ${ticker}`,
     `Company: ${companyName}`,
     `SEC form ${filing.form}, accepted ${filing.acceptedAt}`,
@@ -106,32 +166,9 @@ async function draftReport({ ticker, companyName, filing, release }, client = ne
     "</release>"
   ].join("\n");
 
-  const response = await client.responses.create({
-    model: MODEL,
-    instructions: SYSTEM,
-    input,
-    tools: [{ type: "web_search" }],
-    include: ["web_search_call.action.sources"],
-    reasoning: { effort: EFFORT },
-    text: { format: { type: "json_schema", name: "earnings_report", strict: true, schema: REPORT_SCHEMA } },
-    max_output_tokens: 32000,
-    store: false
-  });
-
-  if (response.status !== "completed") {
-    throw new Error(`OpenAI response ${response.status}: ${response.incomplete_details?.reason ?? response.error?.message ?? "unknown"}`);
-  }
-  const refusal = response.output.flatMap((item) => item.content ?? []).find((part) => part.type === "refusal");
-  if (refusal) throw new Error(`Model refused: ${refusal.refusal}`);
-
-  const seenUrls = new Set(release.urls);
-  collectUrls(response.output, seenUrls);
-  const usage = {
-    input: response.usage?.input_tokens ?? 0,
-    output: response.usage?.output_tokens ?? 0,
-    searches: response.output.filter((item) => item.type === "web_search_call").length
-  };
-  return { report: JSON.parse(response.output_text), seenUrls, usage };
+  const parsed = parseStream(await runClaude(prompt));
+  for (const url of release.urls) parsed.seenUrls.add(url);
+  return parsed;
 }
 
 const squash = (text) => text.replace(/\s+/g, " ").trim().toLowerCase();
@@ -173,4 +210,4 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
   return problems;
 }
 
-module.exports = { draftReport, checkReport, MODEL, MAX_MESSAGE_LENGTH };
+module.exports = { draftReport, checkReport, parseStream, MODEL, MAX_MESSAGE_LENGTH };

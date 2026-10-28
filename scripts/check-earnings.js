@@ -2,14 +2,14 @@
 "use strict";
 
 // Scheduled earnings check. Finds new earnings filings for the watchlist on
-// SEC EDGAR, has an OpenAI model draft and source a Chinese briefing, verifies it, and
+// SEC EDGAR, has Claude Code draft and source a Chinese briefing, verifies it, and
 // posts it to Discord. State lives in state/published-reports.json.
 //
 //   node scripts/check-earnings.js [--dry-run] [--detect-only]
 //     [--since ISO] [--ticker TSLA] [--accession 0001628280-26-012345]
 //
 // --dry-run      draft and print, but do not post or write state
-// --detect-only  list candidate filings only (no model call)
+// --detect-only  list candidate filings only (no Claude call)
 // --since        look back to this time instead of the normal window
 // --accession    process exactly this filing, even if already handled
 
@@ -101,7 +101,7 @@ async function processCandidate(candidate, args, state) {
   }
 
   const { report, seenUrls, usage } = await draftReport({ ...candidate, release });
-  console.log(`${label}: ${MODEL} used ${usage.input} input / ${usage.output} output tokens, ${usage.searches} searches`);
+  console.log(`${label}: ${MODEL} took ${usage.turns} turns, ${usage.searches} searches, $${usage.costUsd.toFixed(2)} equivalent`);
 
   if (!report.is_earnings_release) {
     console.log(`${label}: not an earnings release (${report.skip_reason})`);

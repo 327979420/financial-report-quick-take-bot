@@ -26,12 +26,12 @@ Revenue and EPS against expectations, margins, free cash flow, balance-sheet pos
 
 ## How it runs
 
-**New filing on SEC EDGAR → OpenAI reads the release and checks consensus → automatic checks → Discord**
+**New filing on SEC EDGAR → Claude reads the release and checks consensus → automatic checks → Discord**
 
 A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on US trading days. It looks for new earnings releases (8-K item 2.02, or 6-K results for foreign issuers) from every company in the [watchlist](config/watchlist.json), then:
 
 1. Reads the press release straight from the filing.
-2. Asks OpenAI (gpt-6-astra with web search) to write the Chinese briefing, looking up the analyst consensus and any real after-hours move on the web.
+2. Asks Claude Code (headless, with web search) to write the Chinese briefing, looking up the analyst consensus and any real after-hours move on the web.
 3. Blocks the post unless revenue and EPS can be quoted from the release, every target and price move links to a source that was actually found, and the message fits in 1,700 characters. When only company guidance is available, the message must say so.
 4. Posts to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
 
@@ -39,17 +39,17 @@ A blocked report fails the run (GitHub emails the owner) and is not retried. Kor
 
 To test, run **Check for new earnings** from the Actions tab. It defaults to a dry run that prints the draft without posting. `accession` processes one specific filing.
 
-Needs two repository secrets: `OPENAI_API_KEY` and `DISCORD_WEBHOOK_URL`. The model defaults to `gpt-6-astra` and can be changed with the `MODEL` environment variable.
+Needs two repository secrets: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, so it runs on a Claude subscription rather than API billing) and `DISCORD_WEBHOOK_URL`. The model defaults to Opus and can be changed with the `MODEL` environment variable.
 
 ## Run locally
 
-Requires Node.js 22.
+Requires Node.js 22 and the Claude Code CLI.
 
 ```bash
 npm ci
 npm test
 node scripts/check-earnings.js --detect-only --since 2026-10-20T00:00:00Z
-OPENAI_API_KEY=... node scripts/check-earnings.js --dry-run --accession <accession number>
+node scripts/check-earnings.js --dry-run --accession <accession number>
 ```
 
 The original JSON formatter still works for hand-made summaries (`npm run demo`), and the [manual publishing workflow](.github/workflows/publish-report.yml) can send a prepared message.
