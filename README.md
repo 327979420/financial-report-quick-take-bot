@@ -32,10 +32,12 @@ A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on
 
 1. Reads the press release straight from the filing.
 2. Asks Claude Code (headless, with web search) to write the Chinese briefing, looking up the analyst consensus and any real after-hours move on the web.
-3. Blocks the post unless revenue and EPS can be quoted from the release, every target and price move links to a source that was actually found, and the message fits in 1,700 characters. When only company guidance is available, the message must say so.
+3. Blocks the post unless revenue and EPS can be quoted from the release and the message shows those same figures (allowing only for rounding), every target and price move in the message links to a source that was actually found, and the message fits in 1,700 characters. When only company guidance is available, the message must say so.
 4. Posts to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
 
-A blocked report fails the run (GitHub emails the owner) and is not retried.
+A blocked report fails the run (GitHub emails the owner) and is not retried; to publish it after checking, run the workflow by hand with its `accession` and dry run off. Other errors (SEC or Claude Code failing) are retried on the next runs, up to three attempts.
+
+Each run starts new filings for 20 minutes at most; anything left over is handled by the next hourly run. The check looks back at least 48 hours, and further back to the last run that finished everything, so filings from late Friday are still found on Monday.
 
 **Which companies.** The [watchlist](config/watchlist.json) follows where the money is: the 60 most traded US-listed stocks by trading value (last price × shares traded) from Nasdaq's free stock screener, refreshed weekly inside the same workflow, plus a few pinned names that are always covered. A name already on the list stays while it is still in the top 90, so the list does not churn on one quiet day. ETFs and funds are excluded because they do not report earnings.
 

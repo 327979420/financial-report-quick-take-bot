@@ -22,6 +22,11 @@ const ROOT = path.join(__dirname, "..");
 const STATE_PATH = path.join(ROOT, "state", "published-reports.json");
 const WATCHLIST_PATH = path.join(ROOT, "config", "watchlist.json");
 const LOOKBACK_HOURS = Number(process.env.LOOKBACK_HOURS || 48);
+const MAX_LOOKBACK_DAYS = 7;
+const MAX_ATTEMPTS = 3; // a filing that keeps erroring is given up after this many runs
+// Stop starting new filings after this long, so the run ends and saves state
+// well inside the job's time limit; the next hourly run picks up the rest.
+const RUN_BUDGET_MINUTES = Number(process.env.RUN_BUDGET_MINUTES || 20);
 
 function parseArgs(argv) {
   const args = { dryRun: false, detectOnly: false, since: null, ticker: null, accession: null };
@@ -47,6 +52,21 @@ function watchlistTickers() {
 
 const reportKey = (ticker, period, reportDate) => `${ticker}|${period}|${reportDate}`.toUpperCase();
 
+// Errored filings stay open for another try until they reach MAX_ATTEMPTS.
+const isSettled = (report) => report.status !== "error" || report.attempts >= MAX_ATTEMPTS;
+
+// Looks back at least LOOKBACK_HOURS, and further to the last run that left
+// nothing behind (minus an hour of overlap), so the weekend between Friday's
+// last run and Monday's first, or a run GitHub skipped, cannot open a gap.
+function windowStart(state, now) {
+  const lastClean = state.checkedThrough ? new Date(state.checkedThrough).getTime() - 3600 * 1000 : Infinity;
+  return Math.max(
+    new Date(state.notBefore).getTime(),
+    now - MAX_LOOKBACK_DAYS * 86400 * 1000,
+    Math.min(now - LOOKBACK_HOURS * 3600 * 1000, lastClean)
+  );
+}
+
 async function postToDiscord(content) {
   const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) throw new Error("DISCORD_WEBHOOK_URL is not configured");
@@ -59,16 +79,13 @@ async function postToDiscord(content) {
 }
 
 async function findCandidates(args, state, tickerMap) {
-  const now = Date.now();
-  const windowStart = args.since
-    ? new Date(args.since).getTime()
-    : Math.max(new Date(state.notBefore).getTime(), now - LOOKBACK_HOURS * 3600 * 1000);
-  const handled = new Set(state.reports.map((report) => report.accession).filter(Boolean));
+  const since = args.since ? new Date(args.since).getTime() : windowStart(state, Date.now());
+  const handled = new Set(state.reports.filter(isSettled).map((report) => report.accession).filter(Boolean));
   const tickers = args.ticker ? [args.ticker] : watchlistTickers();
   const candidates = [];
   const unsupported = [];
 
-  console.log(`Checking ${tickers.length} tickers for filings since ${new Date(windowStart).toISOString()}`);
+  console.log(`Checking ${tickers.length} tickers for filings since ${new Date(since).toISOString()}`);
   for (const ticker of tickers) {
     const company = tickerMap.get(ticker);
     if (!company) {
@@ -78,7 +95,7 @@ async function findCandidates(args, state, tickerMap) {
     for (const filing of await sec.recentFilings(company.cik)) {
       const match = args.accession
         ? filing.accession === args.accession
-        : new Date(filing.acceptedAt).getTime() >= windowStart &&
+        : new Date(filing.acceptedAt).getTime() >= since &&
           sec.isEarningsCandidate(filing) &&
           !handled.has(filing.accession);
       // Share classes (GOOG/GOOGL) file under one company; keep each filing once.
@@ -93,7 +110,11 @@ async function findCandidates(args, state, tickerMap) {
 async function processCandidate(candidate, args, state) {
   const { ticker, filing } = candidate;
   const label = `${ticker} ${filing.form} ${filing.accession}`;
-  const record = (fields) => state.reports.push({ ticker, accession: filing.accession, form: filing.form, recordedAt: new Date().toISOString(), ...fields });
+  const record = (fields) => {
+    // An outcome replaces any earlier error entry for the same filing.
+    state.reports = state.reports.filter((item) => !(item.accession === filing.accession && item.status === "error"));
+    state.reports.push({ ticker, accession: filing.accession, form: filing.form, recordedAt: new Date().toISOString(), ...fields });
+  };
 
   const release = await sec.releaseText(candidate.cik, filing);
   if (filing.form === "6-K" && !release.texts.some(sec.looksLikeResults)) {
@@ -136,8 +157,21 @@ async function processCandidate(candidate, args, state) {
   return "published";
 }
 
+// Records a failed attempt and returns how many there have been for this filing.
+function recordError(state, { ticker, filing }, error) {
+  const previous = state.reports.find((item) => item.accession === filing.accession && item.status === "error");
+  const attempts = (previous?.attempts ?? 0) + 1;
+  state.reports = state.reports.filter((item) => item !== previous);
+  state.reports.push({
+    ticker, accession: filing.accession, form: filing.form, recordedAt: new Date().toISOString(),
+    status: "error", attempts, reason: error.message.slice(0, 300)
+  });
+  return attempts;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const startedAt = Date.now();
   const state = JSON.parse(fs.readFileSync(STATE_PATH, "utf8"));
   const before = JSON.stringify(state);
 
@@ -150,22 +184,38 @@ async function main() {
   if (args.detectOnly || candidates.length === 0) return;
 
   let failures = 0;
+  let leftBehind = 0;
   let saved = before;
-  for (const candidate of candidates) {
-    try {
-      const outcome = await processCandidate(candidate, args, state);
-      if (outcome === "blocked") failures++;
-    } catch (error) {
-      // Left unrecorded so the next run tries again.
-      failures++;
-      console.error(`${candidate.ticker} ${candidate.filing.accession}: ${error.message}`);
-    }
-    // Save after every filing so a later crash cannot cause a repeat post.
+  const save = () => {
     const current = JSON.stringify(state);
     if (!args.dryRun && current !== saved) {
       fs.writeFileSync(STATE_PATH, `${JSON.stringify(state, null, 2)}\n`);
       saved = current;
     }
+  };
+  for (const [index, candidate] of candidates.entries()) {
+    if (Date.now() - startedAt > RUN_BUDGET_MINUTES * 60 * 1000) {
+      leftBehind += candidates.length - index;
+      console.log(`Time budget of ${RUN_BUDGET_MINUTES} minutes used; ${candidates.length - index} filing(s) left for the next run`);
+      break;
+    }
+    try {
+      const outcome = await processCandidate(candidate, args, state);
+      if (outcome === "blocked") failures++;
+    } catch (error) {
+      failures++;
+      const attempts = recordError(state, candidate, error);
+      if (attempts < MAX_ATTEMPTS) leftBehind++;
+      const next = attempts < MAX_ATTEMPTS ? "will retry next run" : "giving up";
+      console.error(`${candidate.ticker} ${candidate.filing.accession}: ${error.message} (attempt ${attempts} of ${MAX_ATTEMPTS}, ${next})`);
+    }
+    // Save after every filing so a later crash cannot cause a repeat post.
+    save();
+  }
+  // Only a full scan that left nothing to retry moves the window forward.
+  if (!args.since && !args.ticker && !args.accession && leftBehind === 0) {
+    state.checkedThrough = new Date(startedAt).toISOString();
+    save();
   }
   if (failures) process.exitCode = 1;
 }
@@ -177,4 +227,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseArgs, reportKey };
+module.exports = { parseArgs, reportKey, windowStart, isSettled, recordError };

@@ -44,14 +44,14 @@ The message must be at most ${MAX_MESSAGE_LENGTH} characters, in simplified Chin
 
 ${STYLE_EXAMPLE}
 
-Return the result as JSON. List in consensus_sources and market_reaction_source only URLs you actually opened or found in this session. If the filing is not a quarterly or annual earnings release (for example monthly sales, a shareholder meeting notice, or an acquisition), set is_earnings_release false with a short skip_reason and leave the other fields empty.`;
+Return the result as JSON. Write actual, consensus and market_reaction exactly as they appear in the message. List in consensus_sources and market_reaction_source only URLs you actually opened or found in this session. If the filing is not a quarterly or annual earnings release (for example monthly sales, a shareholder meeting notice, or an acquisition), set is_earnings_release false with a short skip_reason and leave the other fields empty.`;
 
 const metric = {
   type: "object",
   properties: {
     actual: { type: "string", description: "Reported figure as shown in the message, e.g. $29.59B or $3.32" },
-    actual_quote: { type: "string", description: "Short verbatim snippet copied from the release text that contains this figure" },
-    consensus: { type: "string", description: "Target figure, or empty if none" },
+    actual_quote: { type: "string", description: "Short verbatim snippet copied from the release text that contains this figure, at least as precise as the figure in the message" },
+    consensus: { type: "string", description: "Target figure as shown in the message, e.g. $29.3B, or empty if none" },
     consensus_basis: { type: "string", enum: ["market_consensus", "company_guidance", "unavailable"] },
     consensus_sources: { type: "array", items: { type: "string" }, description: "URLs from your web search results that state the target" }
   },
@@ -173,10 +173,56 @@ async function draftReport({ ticker, companyName, filing, release }) {
 
 const squash = (text) => text.replace(/\s+/g, " ").trim().toLowerCase();
 
+// Compares URLs the way a reader would: ignores the scheme, "www.", a
+// trailing slash, the fragment, HTML-escaped ampersands and tracking parameters.
+function normalizeUrl(raw) {
+  try {
+    const url = new URL(raw.trim().replace(/&amp;/g, "&"));
+    for (const key of [...url.searchParams.keys()]) {
+      if (/^(utm_\w+|guccounter|guce_\w+|ref|refsrc|cmpid|mod|taid|ncid|fbclid|gclid)$/i.test(key)) url.searchParams.delete(key);
+    }
+    url.searchParams.sort();
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    return `${host}${url.pathname.replace(/\/+$/, "")}${url.search}`;
+  } catch {
+    return raw.trim();
+  }
+}
+
+const SCALE = { k: 1e3, thousand: 1e3, "万": 1e4, m: 1e6, mn: 1e6, million: 1e6, "亿": 1e8, b: 1e9, bn: 1e9, billion: 1e9, t: 1e12, tn: 1e12, trillion: 1e12 };
+const AMOUNT = /(\d[\d,]*(?:\.\d+)?)\s*(thousand|million|billion|trillion|mn|bn|tn|[kmbt](?![a-z])|万|亿)?/gi;
+
+// Every number in the text with its value and display precision. A number
+// without a unit could be in thousands or millions (financial tables), so it
+// is offered at each scale.
+function amounts(text) {
+  const found = [];
+  for (const [, digits, unit] of text.matchAll(AMOUNT)) {
+    const value = Number(digits.replace(/,/g, ""));
+    const decimals = (digits.split(".")[1] ?? "").length;
+    const scales = unit ? [SCALE[unit.toLowerCase()]] : [1, 1e3, 1e6, 1e9];
+    for (const scale of scales) found.push({ value: value * scale, precision: 0.5 * 10 ** -decimals * scale });
+  }
+  return found;
+}
+
+// True when the figure in the message agrees with a number in the quote,
+// allowing only for rounding to the coarser of the two precisions.
+function figureMatchesQuote(actual, quote) {
+  const [figure] = amounts(actual.replace(/^[^\d]*/, ""));
+  if (!figure) return false;
+  return amounts(quote).some((candidate) =>
+    Math.abs(candidate.value - figure.value) <= Math.max(candidate.precision, figure.precision) * (1 + 1e-9)
+  );
+}
+
 // Returns a list of problems; an empty list means the report may be published.
 function checkReport(report, { ticker, releaseText, seenUrls }) {
   const problems = [];
   const source = squash(releaseText);
+  const message = squash(report.message);
+  const seen = new Set([...seenUrls].map(normalizeUrl));
+  const isSeen = (url) => seen.has(normalizeUrl(url));
 
   if (report.ticker.toUpperCase() !== ticker.toUpperCase()) problems.push(`ticker ${report.ticker} does not match ${ticker}`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(report.report_date)) problems.push(`report_date "${report.report_date}" is not YYYY-MM-DD`);
@@ -188,9 +234,15 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
     if (!item.actual.trim()) problems.push(`${name}.actual is empty`);
     if (!/\d/.test(item.actual_quote) || !source.includes(squash(item.actual_quote))) {
       problems.push(`${name}.actual_quote is not in the release: "${item.actual_quote}"`);
+    } else if (item.actual.trim() && !figureMatchesQuote(item.actual, item.actual_quote)) {
+      problems.push(`${name}.actual ${item.actual} does not match the release quote "${item.actual_quote}"`);
+    }
+    if (item.actual.trim() && !message.includes(squash(item.actual))) problems.push(`${name} ${item.actual} is not the figure in the message`);
+    if (item.consensus_basis !== "unavailable" && item.consensus.trim() && !message.includes(squash(item.consensus))) {
+      problems.push(`${name} target ${item.consensus} is not the figure in the message`);
     }
     if (item.consensus_basis === "market_consensus") {
-      const traced = item.consensus_sources.filter((url) => seenUrls.has(url));
+      const traced = item.consensus_sources.filter(isSeen);
       if (traced.length === 0) problems.push(`${name} consensus has no source from the search results`);
     }
     if (item.consensus_basis === "company_guidance" && !report.message.includes("公司指引目标")) {
@@ -198,8 +250,11 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
     }
   }
 
-  if (report.market_reaction.trim() && !seenUrls.has(report.market_reaction_source)) {
-    problems.push("market reaction has no source from the search results");
+  if (report.market_reaction.trim()) {
+    if (!isSeen(report.market_reaction_source)) problems.push("market reaction has no source from the search results");
+    if (!message.includes(squash(report.market_reaction))) problems.push("market_reaction is not the line in the message");
+  } else if (report.message.includes("市场反应")) {
+    problems.push("message mentions a market reaction but market_reaction is empty");
   }
 
   const length = [...report.message].length;
@@ -210,4 +265,4 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
   return problems;
 }
 
-module.exports = { draftReport, checkReport, parseStream, MODEL, MAX_MESSAGE_LENGTH };
+module.exports = { draftReport, checkReport, parseStream, normalizeUrl, figureMatchesQuote, MODEL, MAX_MESSAGE_LENGTH };
