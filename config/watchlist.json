@@ -1,10 +1,126 @@
 {
-  "version": "0.1",
-  "tier1": ["NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "PLTR", "AMD", "AVGO", "TSM", "MU", "COIN", "MSTR", "HOOD"],
-  "tier2": ["000660.KS", "005930.KS", "SNDK", "STX", "WDC", "MRVL", "ASML", "ARM", "MARA", "RIOT", "IREN", "GLXY"],
-  "themes": {
-    "ai_compute": ["NVDA", "MSFT", "AMZN", "GOOGL", "META", "AMD", "AVGO", "TSM", "PLTR", "MRVL", "ASML", "ARM"],
-    "memory_storage": ["MU", "000660.KS", "005930.KS", "SNDK", "STX", "WDC"],
-    "crypto_equities": ["COIN", "MSTR", "HOOD", "MARA", "RIOT", "IREN", "GLXY"]
+  "version": "0.3",
+  "updatedAt": "2026-09-21",
+  "core": {
+    "mega_cap_tech": [
+      "AAPL",
+      "MSFT",
+      "AMZN",
+      "GOOGL",
+      "META",
+      "TSLA",
+      "NFLX"
+    ],
+    "ai_software_cloud": [
+      "PLTR",
+      "CRM",
+      "ORCL",
+      "ADBE",
+      "NOW",
+      "SNOW",
+      "CRWD",
+      "DDOG",
+      "NET",
+      "APP",
+      "NBIS"
+    ],
+    "ai_hardware_systems": [
+      "DELL"
+    ],
+    "semiconductors": [
+      "NVDA",
+      "AMD",
+      "AVGO",
+      "TSM",
+      "MU",
+      "INTC",
+      "QCOM",
+      "ARM",
+      "ASML",
+      "MRVL",
+      "AMAT",
+      "LRCX",
+      "KLAC",
+      "ADI"
+    ],
+    "memory_storage": [
+      "MU",
+      "SNDK",
+      "STX",
+      "WDC",
+      "000660.KS",
+      "005930.KS"
+    ],
+    "crypto_equities": [
+      "COIN",
+      "MSTR",
+      "HOOD",
+      "MARA",
+      "RIOT",
+      "IREN",
+      "CIFR",
+      "WULF",
+      "APLD",
+      "GLXY"
+    ],
+    "retail_growth": [
+      "RDDT",
+      "ASTS",
+      "RKLB",
+      "AAOI",
+      "ONDS",
+      "OPEN",
+      "GME"
+    ]
+  },
+  "context": [
+    "SPY",
+    "QQQ",
+    "SMH",
+    "SOXL",
+    "IBIT",
+    "BTC-USD",
+    "ETH-USD",
+    "SOL-USD"
+  ],
+  "activeRedditRadar": [
+    "ORCL",
+    "ADBE",
+    "MU",
+    "AVGO",
+    "DELL",
+    "NVDA",
+    "MRVL",
+    "IREN",
+    "SNDK",
+    "NBIS",
+    "MSTR",
+    "AMD",
+    "RDDT",
+    "TSLA",
+    "HOOD",
+    "AAPL",
+    "ASTS",
+    "RKLB",
+    "PLTR",
+    "APLD",
+    "ONDS",
+    "CRM",
+    "CRWD"
+  ],
+  "coverageRules": {
+    "alwaysSummariseCoreEarnings": true,
+    "radarReviewFrequency": "weekly",
+    "candidateWindowDays": 7,
+    "minimumSources": 2,
+    "minimumMentions24h": 5,
+    "promotionRule": "Promote when a ticker clears the mention threshold and has earnings within 30 days or a material company catalyst.",
+    "demotionRule": "Remove from active radar after four quiet weekly reviews unless it remains in the core universe.",
+    "exclusions": [
+      "ETF",
+      "ambiguous ticker",
+      "unverified listing",
+      "mention spike without company catalyst"
+    ]
   }
 }

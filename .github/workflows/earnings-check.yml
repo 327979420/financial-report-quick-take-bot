@@ -1,0 +1,97 @@
+name: Check for new earnings
+
+on:
+  schedule:
+    # Hourly through the US trading day and evening, Monday to Friday (UTC).
+    # Pre-market releases land around 11:00-13:00 UTC, after-close ones around 20:00-22:00.
+    - cron: "20 11-23 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Draft and print only; do not post to Discord or save state
+        type: boolean
+        default: true
+      since:
+        description: Look back to this time (ISO, e.g. 2026-10-22T00:00:00Z) instead of the last 48 hours
+        type: string
+        required: false
+      ticker:
+        description: Only check this ticker
+        type: string
+        required: false
+      accession:
+        description: Process exactly this SEC accession number (for testing or a re-run)
+        type: string
+        required: false
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "config/watchlist.json"
+      - "package*.json"
+      - ".github/workflows/earnings-check.yml"
+
+concurrency:
+  group: earnings-check
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.300
+
+      # Copy-pasted tokens sometimes carry line breaks; strip them and mask the result.
+      - name: Load Claude token
+        env:
+          RAW: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          CLEAN=$(printf '%s' "$RAW" | tr -d '[:space:]')
+          if [ -n "$CLEAN" ]; then echo "::add-mask::$CLEAN"; echo "CLAUDE_CODE_OAUTH_TOKEN=$CLEAN" >> "$GITHUB_ENV"; fi
+
+      # Pull requests only confirm that SEC detection works; no Claude call, no post.
+      - name: Detect filings (pull request)
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-earnings.js --detect-only --since "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Check, draft and publish
+        if: github.event_name != 'pull_request'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          SINCE: ${{ inputs.since }}
+          TICKER: ${{ inputs.ticker }}
+          ACCESSION: ${{ inputs.accession }}
+        run: |
+          args=(--since "$SINCE" --ticker "$TICKER" --accession "$ACCESSION")
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          node scripts/check-earnings.js "${args[@]}"
+
+      - name: Save state
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          if git diff --quiet -- state/; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/
+          git commit -m "Record earnings check results"
+          for attempt in 1 2 3; do
+            git pull --rebase --quiet && git push --quiet && exit 0
+            sleep 5
+          done
+          exit 1
