@@ -41,7 +41,8 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The script stops starting filings after 20 minutes; one Claude call can take 20 more.
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
