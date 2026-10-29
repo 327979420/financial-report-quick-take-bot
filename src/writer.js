@@ -38,7 +38,8 @@ You receive one SEC filing that may contain a quarterly or annual earnings relea
 - Revenue and EPS targets: find the market consensus on the web, ideally confirmed by two current sources (news reports that state the analyst estimate, e.g. LSEG / FactSet / Zacks figures). If no consensus can be found but the company gave guidance last quarter, you may compare against that and must say "公司指引目标" in the message, never "市场预期". If neither exists, say so plainly.
 - Market reaction: include it only if a source you found reports a real after-hours or next-session price move. Otherwise leave it out. Never speculate.
 - Guidance: state the new outlook and compare it with consensus where a source gives one. Do not call it raised or lowered unless the release or a source supports that.
-- If sources disagree with each other or with the release in a way that changes the conclusion, list the conflict in "conflicts" instead of picking one.
+- Sources often differ slightly, e.g. revenue consensus $90.61B vs $90.69B, or a 2.5% vs 4% after-hours move measured at different times. When every source leads to the same verdict (beat, miss or in line), that is not a conflict: write the target or move as a range (市场目标约 $90.61–90.69B, 盘后上涨约 2.5%–4%) and note the difference in "minor_differences". Facts you left out because only one source reports them (e.g. guidance given only on the earnings call) also go in "minor_differences".
+- List in "conflicts" only disagreements that change a verdict (the reported figure beats one source's target but misses another's) or a source figure that contradicts the release. A conflict blocks the post, so do not pick one source to avoid it.
 
 The message must be at most ${MAX_MESSAGE_LENGTH} characters, in simplified Chinese, and follow this layout (emoji in moderation; 🟢 beat, 🟡 mixed, 🔴 miss):
 
@@ -72,12 +73,13 @@ const REPORT_SCHEMA = {
     eps: metric,
     market_reaction: { type: "string", description: "The reaction line as written in the message, or empty" },
     market_reaction_source: { type: "string", description: "URL that reports the price move, or empty" },
-    conflicts: { type: "array", items: { type: "string" } },
+    conflicts: { type: "array", items: { type: "string" }, description: "Disagreements that change a verdict or contradict the release; these block the post" },
+    minor_differences: { type: "array", items: { type: "string" }, description: "Source differences that do not change any verdict, and facts left out" },
     message: { type: "string" }
   },
   required: [
     "is_earnings_release", "skip_reason", "company_name", "ticker", "period", "report_date",
-    "revenue", "eps", "market_reaction", "market_reaction_source", "conflicts", "message"
+    "revenue", "eps", "market_reaction", "market_reaction_source", "conflicts", "minor_differences", "message"
   ],
   additionalProperties: false
 };
@@ -206,6 +208,17 @@ function amounts(text) {
   return found;
 }
 
+// A target written as a range, e.g. "$90.61–90.69B" or "约 $4.72-$4.73", as
+// [low, high]; a unit after the second number applies to both. Null otherwise.
+function targetRange(text) {
+  const match = text.match(/(\d[\d,]*(?:\.\d+)?)\s*(thousand|million|billion|trillion|mn|bn|tn|[kmbt](?![a-z])|万|亿)?\s*(?:–|—|-|~|～|至|to)\s*[^\d\s]*\s*(\d[\d,]*(?:\.\d+)?)\s*(thousand|million|billion|trillion|mn|bn|tn|[kmbt](?![a-z])|万|亿)?/i);
+  if (!match) return null;
+  const [, low, lowUnit, high, highUnit] = match;
+  const scale = (unit) => (unit ? SCALE[unit.toLowerCase()] : 1);
+  const values = [Number(low.replace(/,/g, "")) * scale(lowUnit || highUnit), Number(high.replace(/,/g, "")) * scale(highUnit || lowUnit)];
+  return [Math.min(...values), Math.max(...values)];
+}
+
 // True when the figure in the message agrees with a number in the quote,
 // allowing only for rounding to the coarser of the two precisions.
 function figureMatchesQuote(actual, quote) {
@@ -241,6 +254,11 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
     if (item.consensus_basis !== "unavailable" && item.consensus.trim() && !message.includes(squash(item.consensus))) {
       problems.push(`${name} target ${item.consensus} is not the figure in the message`);
     }
+    const range = item.consensus_basis !== "unavailable" && targetRange(item.consensus);
+    const [figure] = amounts(item.actual.replace(/^[^\d]*/, ""));
+    if (range && figure && figure.value >= range[0] && figure.value <= range[1]) {
+      problems.push(`${name} ${item.actual} is inside the target range ${item.consensus}, so sources disagree on beat or miss`);
+    }
     if (item.consensus_basis === "market_consensus") {
       const traced = item.consensus_sources.filter(isSeen);
       if (traced.length === 0) problems.push(`${name} consensus has no source from the search results`);
@@ -265,4 +283,4 @@ function checkReport(report, { ticker, releaseText, seenUrls }) {
   return problems;
 }
 
-module.exports = { draftReport, checkReport, parseStream, normalizeUrl, figureMatchesQuote, MODEL, MAX_MESSAGE_LENGTH };
+module.exports = { draftReport, checkReport, parseStream, normalizeUrl, figureMatchesQuote, targetRange, MODEL, MAX_MESSAGE_LENGTH };

@@ -141,6 +141,7 @@ async function processCandidate(candidate, args, state) {
 
   const problems = checkReport(report, { ticker, releaseText: release.text, seenUrls });
   console.log(`\n----- ${label} -----\n${report.message}\n`);
+  for (const note of report.minor_differences ?? []) console.log(`${label}: note: ${note}`);
   if (problems.length) {
     console.log(`${label}: BLOCKED\n- ${problems.join("\n- ")}`);
     record({ status: "blocked", period: report.period, reportDate: report.report_date, reason: problems.join("; ") });

@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const sec = require("../src/sec");
-const { checkReport, parseStream, normalizeUrl, figureMatchesQuote } = require("../src/writer");
+const { checkReport, parseStream, normalizeUrl, figureMatchesQuote, targetRange } = require("../src/writer");
 const { parseArgs } = require("../scripts/check-earnings");
 
 test("keeps 8-K item 2.02 and 6-K filings only", () => {
@@ -227,4 +227,22 @@ test("retries an erroring filing three times, then gives up", () => {
   assert.equal(recordError(state, candidate, new Error("again")), 3);
   assert.equal(isSettled(state.reports[0]), true);
   assert.equal(isSettled({ status: "blocked" }), true);
+});
+
+test("reads a target written as a range", () => {
+  assert.deepEqual(targetRange("$90.61–90.69B"), [90.61e9, 90.69e9]);
+  assert.deepEqual(targetRange("约 $4.72-$4.73"), [4.72, 4.73]);
+  assert.deepEqual(targetRange("$29,300 to $29,400 million"), [29.3e9, 29.4e9]);
+  assert.equal(targetRange("$29.3B"), null);
+  assert.equal(targetRange("-$0.12"), null);
+});
+
+test("allows a target range unless the figure falls inside it", () => {
+  const ranged = (consensus) => {
+    const report = { ...good, revenue: { ...good.revenue, consensus } };
+    report.message = good.message.replace("$29.3B", consensus);
+    return checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls });
+  };
+  assert.deepEqual(ranged("$29.25–29.35B"), []);
+  assert.match(ranged("$29.5–29.7B").join(), /inside the target range/);
 });
