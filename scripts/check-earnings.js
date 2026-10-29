@@ -41,7 +41,7 @@ function parseArgs(argv) {
 
 function watchlistTickers() {
   const watchlist = JSON.parse(fs.readFileSync(WATCHLIST_PATH, "utf8"));
-  const names = [...Object.values(watchlist.core).flat(), ...(watchlist.activeRedditRadar ?? [])];
+  const names = [...(watchlist.mostTraded ?? []), ...(watchlist.pinned ?? [])];
   return [...new Set(names.map((name) => name.toUpperCase()))].sort();
 }
 
@@ -81,7 +81,9 @@ async function findCandidates(args, state, tickerMap) {
         : new Date(filing.acceptedAt).getTime() >= windowStart &&
           sec.isEarningsCandidate(filing) &&
           !handled.has(filing.accession);
-      if (match) candidates.push({ ticker, companyName: company.name, cik: company.cik, filing });
+      // Share classes (GOOG/GOOGL) file under one company; keep each filing once.
+      const seen = candidates.some((candidate) => candidate.filing.accession === filing.accession);
+      if (match && !seen) candidates.push({ ticker, companyName: company.name, cik: company.cik, filing });
     }
   }
   if (unsupported.length) console.log(`Not on EDGAR, skipped: ${unsupported.join(", ")}`);

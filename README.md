@@ -35,7 +35,9 @@ A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on
 3. Blocks the post unless revenue and EPS can be quoted from the release, every target and price move links to a source that was actually found, and the message fits in 1,700 characters. When only company guidance is available, the message must say so.
 4. Posts to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
 
-A blocked report fails the run (GitHub emails the owner) and is not retried. Korean listings (SK hynix, Samsung) are not on EDGAR and are skipped for now.
+A blocked report fails the run (GitHub emails the owner) and is not retried.
+
+**Which companies.** The [watchlist](config/watchlist.json) follows where the money is: the 60 most traded US-listed stocks by trading value (last price × shares traded) from Nasdaq's free stock screener, refreshed weekly inside the same workflow, plus a few pinned names that are always covered. A name already on the list stays while it is still in the top 90, so the list does not churn on one quiet day. ETFs and funds are excluded because they do not report earnings.
 
 To test, run **Check for new earnings** from the Actions tab. It defaults to a dry run that prints the draft without posting. `accession` processes one specific filing.
 

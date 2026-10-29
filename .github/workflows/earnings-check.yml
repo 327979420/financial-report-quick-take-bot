@@ -64,10 +64,16 @@ jobs:
           CLEAN=$(printf '%s' "$RAW" | tr -d '[:space:]')
           if [ -n "$CLEAN" ]; then echo "::add-mask::$CLEAN"; echo "CLAUDE_CODE_OAUTH_TOKEN=$CLEAN" >> "$GITHUB_ENV"; fi
 
-      # Pull requests only confirm that SEC detection works; no Claude call, no post.
+      # Pull requests only confirm that Nasdaq and SEC are reachable; no Claude call, no post.
       - name: Detect filings (pull request)
         if: github.event_name == 'pull_request'
-        run: node scripts/check-earnings.js --detect-only --since "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+        run: |
+          node scripts/refresh-watchlist.js --dry-run
+          node scripts/check-earnings.js --detect-only --since "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Refresh most-traded watchlist (weekly)
+        if: github.event_name != 'pull_request'
+        run: node scripts/refresh-watchlist.js --if-older-than-days 7
 
       - name: Check, draft and publish
         if: github.event_name != 'pull_request'
@@ -85,10 +91,10 @@ jobs:
       - name: Save state
         if: always() && github.event_name != 'pull_request'
         run: |
-          if git diff --quiet -- state/; then exit 0; fi
+          if git diff --quiet -- state/ config/watchlist.json; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/
+          git add state/ config/watchlist.json
           git commit -m "Record earnings check results"
           for attempt in 1 2 3; do
             git pull --rebase --quiet && git push --quiet && exit 0

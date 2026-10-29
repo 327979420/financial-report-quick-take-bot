@@ -136,3 +136,24 @@ test("surfaces a failed Claude Code run", () => {
   const line = JSON.stringify({ type: "result", is_error: true, subtype: "success", result: "Not logged in" });
   assert.throws(() => parseStream(line), /Claude Code failed: Not logged in/);
 });
+
+const { rankByTradingValue, pickMostTraded } = require("../scripts/refresh-watchlist");
+
+test("ranks operating companies by trading value", () => {
+  const rows = [
+    { symbol: "NVDA", name: "NVIDIA Corporation Common Stock", lastsale: "$200.00", volume: "100", marketCap: "5000" },
+    { symbol: "META", name: "Meta Platforms Inc. Class A Common Stock", lastsale: "$700.00", volume: "50", marketCap: "1800" },
+    { symbol: "BRK/B", name: "Berkshire Hathaway Inc.", lastsale: "$500.00", volume: "100", marketCap: "1000" },
+    { symbol: "XYZW", name: "Example Corp Warrants", lastsale: "$1.00", volume: "1000000", marketCap: "10" },
+    { symbol: "PFD", name: "Example Fund", lastsale: "$10.00", volume: "100000", marketCap: "10" },
+    { symbol: "NONE", name: "Quiet Inc. Common Stock", lastsale: "$5.00", volume: "0", marketCap: "10" }
+  ];
+  assert.deepEqual(rankByTradingValue(rows), [{ symbol: "META", value: 35000 }, { symbol: "NVDA", value: 20000 }]);
+});
+
+test("keeps existing names while they stay near the top", () => {
+  const ranked = ["A", "B", "C", "D", "E", "F"].map((symbol) => ({ symbol, value: 1 }));
+  assert.deepEqual(pickMostTraded(ranked, [], 3, 5), ["A", "B", "C"]);
+  // E is still inside the top 5, so it stays; F has fallen out of it.
+  assert.deepEqual(pickMostTraded(ranked, ["E", "F"], 3, 5), ["A", "B", "E"]);
+});
