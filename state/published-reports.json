@@ -78,6 +78,157 @@
       "reportDate": "2026-09-10",
       "status": "published",
       "workflowRun": "34540309917"
+    },
+    {
+      "ticker": "CAT",
+      "accession": "0000018230-26-000052",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:30:12.086Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "reason": "conflict: 营收市场目标各来源结论不一：Zacks 称营收较一致预期高约 0.48%（隐含约 $20.58B），GuruFocus 给出 $20.54B，另一来源给出 $20.55B，三者均为 Beat；但 Stocktwits/Yahoo（引用 Fiscal.ai）给出 $20.69B，实际 $20.682B 低约 $8M，判定为 Miss。实际营收在一家来源下 Beat、在另一家下 Miss，营收结论无法确定。; revenue $20.682B is inside the target range 约 $20.54–20.69B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "GEV",
+      "accession": "0001996810-26-000162",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:31:25.389Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-28",
+      "publishedAt": "2026-10-29T17:31:25.389Z"
+    },
+    {
+      "ticker": "GOOG",
+      "accession": "0001652044-26-000080",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:32:25.708Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-28",
+      "reason": "conflict: 营收市场目标两家来源给出的结论相反：Investing.com 给出 $127.22B（实际 $127.58B，Beat 约 +0.3%），MarketBeat 给出 $127.97B（Miss 约 -0.3%）。营收是 Beat 还是 Miss 因此无法确定，GuruFocus 的标题也写的是营收不及预期。; revenue $127.58B is inside the target range $127.22–127.97B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "HOOD",
+      "accession": "0001783879-26-000164",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:33:25.817Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-27",
+      "reason": "conflict: 营收目标影响结论：sci-tech-today（引 CNBC/LSEG）给出 $1.42B，实际 $1.424B 算持平；Investing.com 和 Decrypt 给出约 $1.43B，实际算小幅不及。; conflict: EPS 目标的口径不清：Investing.com 写的是调整后 EPS 一致预期 $0.55（实际调整后 $0.60，属超预期）；Decrypt 写的是 GAAP $0.51 对比 $0.55，sci-tech-today 引 LSEG 为 GAAP $0.56（属不及）。同一个 $0.55 被不同来源当作不同口径，结论在超预期和不及之间来回变。; conflict: Robinhood 后来提交了 8-K/A 修订版 Exhibit 99.1（000178387926000170），其中调整后净利润为 $542M、非 GAAP 调整的税务影响为 (4)；本次文件原稿为 $550M 和 +4。修订版数字与所给原稿不一致。; revenue.actual_quote is not in the release: \"Total net revenues | 1,274 | 1,424 | 12 %\"; revenue $1.424B is inside the target range 约 $1.42–1.43B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "LLY",
+      "accession": "0000059478-26-000104",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:34:31.742Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "publishedAt": "2026-10-29T17:34:31.742Z"
+    },
+    {
+      "ticker": "MA",
+      "accession": "0001141391-26-000122",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:35:25.748Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "publishedAt": "2026-10-29T17:35:25.748Z"
+    },
+    {
+      "ticker": "MSFT",
+      "accession": "0001193125-26-436122",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:36:30.883Z",
+      "status": "published",
+      "period": "Q1 FY27",
+      "reportDate": "2026-10-28",
+      "publishedAt": "2026-10-29T17:36:30.883Z"
+    },
+    {
+      "ticker": "NOW",
+      "accession": "0001373715-26-000092",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:37:41.940Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-28",
+      "publishedAt": "2026-10-29T17:37:41.940Z"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-436872",
+      "form": "6-K",
+      "recordedAt": "2026-10-29T17:37:42.220Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-435019",
+      "form": "6-K",
+      "recordedAt": "2026-10-29T17:37:42.439Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-435015",
+      "form": "6-K",
+      "recordedAt": "2026-10-29T17:37:42.728Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-435008",
+      "form": "6-K",
+      "recordedAt": "2026-10-29T17:37:43.024Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-434994",
+      "form": "6-K",
+      "recordedAt": "2026-10-29T17:37:43.460Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "STX",
+      "accession": "0001137789-26-000300",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:38:54.177Z",
+      "status": "published",
+      "period": "Q1 FY27",
+      "reportDate": "2026-10-27",
+      "publishedAt": "2026-10-29T17:38:54.177Z"
+    },
+    {
+      "ticker": "V",
+      "accession": "0001403161-26-000126",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:40:48.915Z",
+      "status": "blocked",
+      "period": "Q4 FY26",
+      "reportDate": "2026-10-27",
+      "reason": "conflict: GuruFocus（https://www.gurufocus.com/news/9145360/...，标题为“missing estimates”，因 403 无法打开，仅见于搜索摘要）称市场预期 EPS $3.54、营收约 $12.19B。按这组数字，调整后 EPS $3.48 和营收 $12.14B 都会变成 Miss。Benzinga、Tickeron（FactSet）和 Investing.com 给出的则是 $3.44 / $12.08–12.09B，按此为 Beat。两边结论相反，所以营收和 EPS 的判定有冲突。; revenue.actual_quote is not in the release: \"Net revenue | $ | 12,139 | 13 %\""
+    },
+    {
+      "ticker": "VRT",
+      "accession": "0001628280-26-067707",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T17:41:33.811Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-28",
+      "publishedAt": "2026-10-29T17:41:33.811Z"
     }
-  ]
+  ],
+  "checkedThrough": "2026-10-29T17:28:21.243Z"
 }
