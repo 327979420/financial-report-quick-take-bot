@@ -228,7 +228,57 @@
       "period": "Q3 FY26",
       "reportDate": "2026-10-28",
       "publishedAt": "2026-10-29T17:41:33.811Z"
+    },
+    {
+      "ticker": "AMZN",
+      "accession": "0001018724-26-000038",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T22:52:57.216Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "publishedAt": "2026-10-29T22:52:57.216Z"
+    },
+    {
+      "ticker": "COIN",
+      "accession": "0001679788-26-000121",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T22:54:08.603Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "reason": "conflict: 营收的超预期/不及预期结论因来源而异：实际营收 $1.2156B 高于 Zacks/Yahoo 的 $1.17B（Beat 约 +3.9%）和 MarketBeat/StockStory 的 $1.21B（Beat 约 +0.5%~0.8%），但低于 Seeking Alpha 的 $1.22B（Miss 约 -0.4%）；Investing.com 则称“符合预期”。; conflict: 盘后股价反应方向相互矛盾：Reuters 报道盘后下跌 3.3%（另一版本为 -2.55%），StockStory 报道下跌 2% 至 $156.86；Investing.com 报道上涨约 0.2%，Benzinga 报道上涨 1.2% 至 $162.62。因此结论无法确定，消息中未写入市场反应。; revenue $1.22B is inside the target range $1.17–1.22B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "INTC",
+      "accession": "0000050863-26-000188",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T22:54:48.150Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "reason": "conflict: Revenue verdict depends on the source. The reported $16.51B ($16,513M) is below MarketBeat's $16.54B consensus, a narrow miss, but above Benzinga Pro's $16.47B and Shacknews' $16.44B, a beat. Seeking Alpha's headline also says Q3 results missed forecasts. The revenue Beat/Miss verdict cannot be settled.; revenue $16.51B is inside the target range $16.44–16.54B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "MSTR",
+      "accession": "0001050446-26-000047",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T22:55:30.109Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-29",
+      "publishedAt": "2026-10-29T22:55:30.109Z"
+    },
+    {
+      "ticker": "SNDK",
+      "accession": "0001628280-26-068243",
+      "form": "8-K",
+      "recordedAt": "2026-10-29T22:56:23.254Z",
+      "status": "published",
+      "period": "Q1 FY27",
+      "reportDate": "2026-10-29",
+      "publishedAt": "2026-10-29T22:56:23.254Z"
     }
   ],
-  "checkedThrough": "2026-10-29T17:28:21.243Z"
+  "checkedThrough": "2026-10-29T22:52:04.395Z"
 }
