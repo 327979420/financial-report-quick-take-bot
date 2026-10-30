@@ -278,7 +278,17 @@
       "period": "Q1 FY27",
       "reportDate": "2026-10-29",
       "publishedAt": "2026-10-29T22:56:23.254Z"
+    },
+    {
+      "ticker": "XOM",
+      "accession": "0002115436-26-000018",
+      "form": "8-K",
+      "recordedAt": "2026-10-30T17:04:37.073Z",
+      "status": "blocked",
+      "period": "Q3 FY26",
+      "reportDate": "2026-10-30",
+      "reason": "conflict: 营收预期结论相反：MarketBeat 给出营收预期 $104.89B（$110.50B 为 Beat 约 +5.4%），而 Yahoo Finance/StockStory 给出 S&P 共识 $118.3B（$110.5B 为 Miss 约 -6.6%）。ChartMill 搜索摘要显示以 $113.16B 对比 $104.51B 计为 Beat（页面 403 无法打开）。; conflict: GuruFocus 标题称 Q3 营收为 $85.8B 且 EPS 双双不及预期，与财报的 Sales and other operating revenue $110,503M / 总收入 $113,164M 不符（页面 403 无法打开核实）。"
     }
   ],
-  "checkedThrough": "2026-10-29T22:52:04.395Z"
+  "checkedThrough": "2026-10-30T17:03:36.126Z"
 }
