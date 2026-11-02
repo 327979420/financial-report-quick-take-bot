@@ -288,7 +288,25 @@
       "period": "Q3 FY26",
       "reportDate": "2026-10-30",
       "reason": "conflict: 营收预期结论相反：MarketBeat 给出营收预期 $104.89B（$110.50B 为 Beat 约 +5.4%），而 Yahoo Finance/StockStory 给出 S&P 共识 $118.3B（$110.5B 为 Miss 约 -6.6%）。ChartMill 搜索摘要显示以 $113.16B 对比 $104.51B 计为 Beat（页面 403 无法打开）。; conflict: GuruFocus 标题称 Q3 营收为 $85.8B 且 EPS 双双不及预期，与财报的 Sales and other operating revenue $110,503M / 总收入 $113,164M 不符（页面 403 无法打开核实）。"
+    },
+    {
+      "ticker": "LITE",
+      "accession": "0001628280-26-068655",
+      "form": "8-K",
+      "recordedAt": "2026-11-02T20:51:34.419Z",
+      "status": "published",
+      "period": "Q1 FY27",
+      "reportDate": "2026-11-02",
+      "publishedAt": "2026-11-02T20:51:34.419Z"
+    },
+    {
+      "ticker": "MRVL",
+      "accession": "0001193125-26-442714",
+      "form": "8-K",
+      "recordedAt": "2026-11-02T20:51:42.562Z",
+      "status": "skipped",
+      "reason": "Acquisition announcement (Marvell to acquire Lumentum in an all-stock deal, 4.500 MRVL shares per LITE share, implied EV $115B). It only says in words that Q3 FY27 preliminary revenue is in line with guidance, with no reported revenue/EPS figures, so it is not a quarterly earnings release."
     }
   ],
-  "checkedThrough": "2026-10-30T17:03:36.126Z"
+  "checkedThrough": "2026-11-02T20:50:14.637Z"
 }
