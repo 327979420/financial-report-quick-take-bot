@@ -306,7 +306,27 @@
       "recordedAt": "2026-11-02T20:51:42.562Z",
       "status": "skipped",
       "reason": "Acquisition announcement (Marvell to acquire Lumentum in an all-stock deal, 4.500 MRVL shares per LITE share, implied EV $115B). It only says in words that Q3 FY27 preliminary revenue is in line with guidance, with no reported revenue/EPS figures, so it is not a quarterly earnings release."
+    },
+    {
+      "ticker": "AAPL",
+      "accession": "0000320193-26-000024",
+      "form": "8-K",
+      "recordedAt": "2026-11-03T02:58:52.541Z",
+      "status": "published",
+      "period": "Q4 FY26",
+      "reportDate": "2026-11-02",
+      "publishedAt": "2026-11-03T02:58:52.541Z"
+    },
+    {
+      "ticker": "PLTR",
+      "accession": "0001321655-26-000045",
+      "form": "8-K",
+      "recordedAt": "2026-11-03T02:59:38.016Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-02",
+      "publishedAt": "2026-11-03T02:59:38.016Z"
     }
   ],
-  "checkedThrough": "2026-11-02T20:50:14.637Z"
+  "checkedThrough": "2026-11-03T02:57:51.009Z"
 }
