@@ -336,7 +336,67 @@
       "period": "Q3 FY26",
       "reportDate": "2026-11-03",
       "publishedAt": "2026-11-04T00:03:02.701Z"
+    },
+    {
+      "ticker": "ANET",
+      "accession": "0001596532-26-000252",
+      "form": "8-K",
+      "recordedAt": "2026-11-05T00:27:45.323Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-03",
+      "publishedAt": "2026-11-05T00:27:45.323Z"
+    },
+    {
+      "ticker": "ARM",
+      "accession": "0001973239-26-000142",
+      "form": "6-K",
+      "recordedAt": "2026-11-05T00:28:41.818Z",
+      "status": "published",
+      "period": "Q2 FY27",
+      "reportDate": "2026-11-04",
+      "publishedAt": "2026-11-05T00:28:41.818Z"
+    },
+    {
+      "ticker": "ARM",
+      "accession": "0001973239-26-000141",
+      "form": "6-K",
+      "recordedAt": "2026-11-05T00:29:25.646Z",
+      "status": "skipped",
+      "period": "Q2 FY27",
+      "reportDate": "2026-11-04",
+      "reason": "duplicate of a published report"
+    },
+    {
+      "ticker": "BKNG",
+      "accession": "0001075531-26-000044",
+      "form": "8-K",
+      "recordedAt": "2026-11-05T00:30:49.966Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-03",
+      "publishedAt": "2026-11-05T00:30:49.966Z"
+    },
+    {
+      "ticker": "QCOM",
+      "accession": "0000804328-26-000127",
+      "form": "8-K",
+      "recordedAt": "2026-11-05T00:31:44.104Z",
+      "status": "published",
+      "period": "Q4 FY26",
+      "reportDate": "2026-11-04",
+      "publishedAt": "2026-11-05T00:31:44.104Z"
+    },
+    {
+      "ticker": "SHOP",
+      "accession": "0001594805-26-000067",
+      "form": "8-K",
+      "recordedAt": "2026-11-05T00:32:34.671Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-03",
+      "publishedAt": "2026-11-05T00:32:34.671Z"
     }
   ],
-  "checkedThrough": "2026-11-04T00:02:02.958Z"
+  "checkedThrough": "2026-11-05T00:26:51.929Z"
 }
