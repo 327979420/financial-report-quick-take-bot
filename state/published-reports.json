@@ -406,7 +406,17 @@
       "period": "Q3 FY26",
       "reportDate": "2026-11-05",
       "reason": "conflict: The revenue verdict depends on the source. Reported $4.134B beats Investing.com's $4.11B and 247wallst's $4.12B, is roughly level with MarketBeat's $4.13B, falls slightly short of StockStory's $4.14B (S&P), and misses Chartmill's $4.1677B by about 0.8%. So it could be a beat, in line or a miss.; conflict: The price move goes in opposite directions. StockStory reports shares up 1.7% to $110.64 right after the results, and Benzinga (per search summary) reports up 2.68% to $111.70. Investing.com says shares fell 1%. Because the direction itself conflicts, the message leaves out the market reaction.; revenue $4.134B is inside the target range $4.11–4.17B, so sources disagree on beat or miss"
+    },
+    {
+      "ticker": "MRNA",
+      "accession": "0001682852-26-000194",
+      "form": "8-K",
+      "recordedAt": "2026-11-06T18:08:11.403Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-06",
+      "publishedAt": "2026-11-06T18:08:11.403Z"
     }
   ],
-  "checkedThrough": "2026-11-05T18:50:53.298Z"
+  "checkedThrough": "2026-11-06T18:07:26.123Z"
 }
