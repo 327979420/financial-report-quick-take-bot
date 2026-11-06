@@ -17,6 +17,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const sec = require("../src/sec");
 const { draftReport, checkReport, MODEL } = require("../src/writer");
+const { renderCard, cardToText, cardLength } = require("../src/card");
 
 const ROOT = path.join(__dirname, "..");
 const STATE_PATH = path.join(ROOT, "state", "published-reports.json");
@@ -67,13 +68,15 @@ function windowStart(state, now) {
   );
 }
 
-async function postToDiscord(content) {
+const DISCORD_EMBED_LIMIT = 6000;
+
+async function postToDiscord(card) {
   const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) throw new Error("DISCORD_WEBHOOK_URL is not configured");
   const response = await fetch(`${url}?wait=true`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ content, allowed_mentions: { parse: [] } })
+    body: JSON.stringify({ embeds: [card], allowed_mentions: { parse: [] } })
   });
   if (!response.ok) throw new Error(`Discord returned HTTP ${response.status}`);
 }
@@ -140,7 +143,10 @@ async function processCandidate(candidate, args, state) {
   }
 
   const problems = checkReport(report, { ticker, releaseText: release.text, seenUrls });
-  console.log(`\n----- ${label} -----\n${report.message}\n`);
+  const card = renderCard(report, { filing, releaseUrls: release.urls });
+  if (cardLength(card) > DISCORD_EMBED_LIMIT) problems.push(`card is ${cardLength(card)} characters (Discord limit ${DISCORD_EMBED_LIMIT})`);
+  console.log(`\n----- ${label} -----\n${cardToText(card)}\n`);
+  if (args.dryRun) console.log(`${label}: card JSON ${JSON.stringify(card)}`);
   for (const note of report.minor_differences ?? []) console.log(`${label}: note: ${note}`);
   if (problems.length) {
     console.log(`${label}: BLOCKED\n- ${problems.join("\n- ")}`);
@@ -152,7 +158,7 @@ async function processCandidate(candidate, args, state) {
     console.log(`${label}: passed checks (dry run, not posted)`);
     return "drafted";
   }
-  await postToDiscord(report.message);
+  await postToDiscord(card);
   record({ status: "published", period: report.period, reportDate: report.report_date, publishedAt: new Date().toISOString() });
   console.log(`${label}: published ${report.period}`);
   return "published";

@@ -31,9 +31,9 @@ Revenue and EPS against expectations, margins, free cash flow, balance-sheet pos
 A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on US trading days. It looks for new earnings releases (8-K item 2.02, or 6-K results for foreign issuers) from every company in the [watchlist](config/watchlist.json), then:
 
 1. Reads the press release straight from the filing.
-2. Asks Claude Code (headless, with web search) to write the Chinese briefing, looking up the analyst consensus and any real after-hours move on the web.
-3. Blocks the post unless revenue and EPS can be quoted from the release and the message shows those same figures (allowing only for rounding), every target and price move in the message links to a source that was actually found, the message fits in 1,700 characters, and sources do not disagree on whether a figure beat or missed. Small differences that leave the verdict unchanged (e.g. $90.61B vs $90.69B consensus) are shown as a range instead. When only company guidance is available, the message must say so.
-4. Posts to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
+2. Asks Claude Code (headless, with web search) for the card's fields in Chinese: a short verdict, revenue / EPS / guidance against expectations, any real after-hours move, and up to three highlights.
+3. Blocks the post unless revenue, EPS and guidance can be quoted from the release (allowing only for rounding), every target and price move links to a source that was actually found, the text fits the card, and sources do not disagree on whether a figure beat or missed. Small differences that leave the verdict unchanged (e.g. $90.61B vs $90.69B consensus) are shown as a range instead.
+4. Lays the result out as a Discord card (colour bar for beat / mixed / miss, a scoreboard with the surprise % computed in code, highlights, sources), posts it to Discord and records the result in [state/published-reports.json](state/published-reports.json), so each report goes out once.
 
 A blocked report fails the run (GitHub emails the owner) and is not retried; to publish it after checking, run the workflow by hand with its `accession` and dry run off. Other errors (SEC or Claude Code failing) are retried on the next runs, up to three attempts.
 
