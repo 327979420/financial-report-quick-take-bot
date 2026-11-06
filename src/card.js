@@ -26,18 +26,30 @@ function surprisePct(actual, target) {
   return ((a - t) / Math.abs(t)) * 100;
 }
 
-function surpriseLine(pct) {
+const signed = (pct) => `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
+
+// One surprise, or the spread of surprises when the target is a range
+// (checkReport has already blocked a figure that falls inside the range).
+function surpriseLine(pct, otherPct = null) {
   if (pct === null) return "";
-  const text = `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
-  if (pct >= IN_LINE_PCT) return `✅ ${text}`;
-  if (pct <= -IN_LINE_PCT) return `❌ ${text}`;
+  const [low, high] = otherPct === null ? [pct, pct] : [Math.min(pct, otherPct), Math.max(pct, otherPct)];
+  const text = low === high ? signed(low) : `${signed(low)}~${signed(high)}`;
+  if (low >= IN_LINE_PCT) return `✅ ${text}`;
+  if (high <= -IN_LINE_PCT) return `❌ ${text}`;
   return `➖ 持平 ${text}`;
+}
+
+function surpriseFor(actual, target) {
+  const range = targetRange(target);
+  if (!range) return surpriseLine(surprisePct(actual, target));
+  const fmt = (value) => String(value);
+  return surpriseLine(surprisePct(actual, fmt(range[0])), surprisePct(actual, fmt(range[1])));
 }
 
 function scoreField(name, actual, target, basis) {
   const label = TARGET_LABEL[basis];
   const lines = [`**${actual}**`];
-  if (label && target.trim()) lines.push(`${label} ${target}`, surpriseLine(surprisePct(actual, target)));
+  if (label && target.trim()) lines.push(`${label} ${target}`, surpriseFor(actual, target));
   else lines.push("无可比预期");
   return { name, value: lines.filter(Boolean).join("\n"), inline: true };
 }

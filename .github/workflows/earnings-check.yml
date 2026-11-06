@@ -72,13 +72,6 @@ jobs:
           node scripts/refresh-watchlist.js --dry-run
           node scripts/check-earnings.js --detect-only --since "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)"
 
-      # TEMPORARY: dry runs of the new card on two published filings. No Discord secret. Remove before merging.
-      - name: Card dry run (temporary)
-        if: github.event_name == 'pull_request'
-        run: |
-          node scripts/check-earnings.js --dry-run --ticker ANET --accession 0001596532-26-000252 || true
-          node scripts/check-earnings.js --dry-run --ticker ARM --accession 0001973239-26-000142 || true
-
       - name: Refresh most-traded watchlist (weekly)
         if: github.event_name != 'pull_request'
         run: node scripts/refresh-watchlist.js --if-older-than-days 7

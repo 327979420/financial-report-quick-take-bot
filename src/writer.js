@@ -29,6 +29,7 @@ You receive one SEC filing that may contain a quarterly or annual earnings relea
 - List in "conflicts" only disagreements that change a verdict (the figure beats one source's target but misses another's) or a source figure that contradicts the release. A conflict blocks the post, so do not pick one source to avoid it.
 
 Writing, in simplified Chinese, short and plain:
+- company_name: the short name people use, without "Inc.", "Corp." or "plc" (e.g. "Arista Networks", "Arm", "Alphabet").
 - verdict: beat (revenue and EPS beat and guidance is not weak), miss (both miss or guidance clearly weak), otherwise mixed.
 - headline: at most ${MAX_HEADLINE} characters, the verdict in words, e.g. "全面超预期，指引更强", "营收超预期，但指引偏弱", "双双不及预期".
 - summary: one sentence of at most ${MAX_SUMMARY} characters saying why, without repeating scoreboard numbers.

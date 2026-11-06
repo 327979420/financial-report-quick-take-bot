@@ -219,6 +219,8 @@ test("lays out the card with computed surprises", () => {
   assert.equal(card.fields[3].value, "📉 盘后 -4%");
   assert.match(card.fields[4].value, /^· AI 半导体营收/);
   assert.equal(card.footer.text, "来源：SEC 8-K · 预期 reuters.com / cnbc.com");
+  const ranged = renderCard({ ...good, revenue: { ...good.revenue, consensus: "$29.0–29.3B" } }, { filing: { form: "8-K", acceptedAt: "2026-09-02T20:10:00Z" }, releaseUrls: [] });
+  assert.equal(ranged.fields[0].value, "**$29.59B**\n预期 $29.0–29.3B\n✅ +1.0%~+2.0%");
   assert.match(cardToText(card), /\[营收\] \$29\.59B \| 预期 \$29\.3B \| ✅ \+1\.0%/);
 });
 
@@ -243,6 +245,7 @@ test("computes surprises against ranges and calls small ones in line", () => {
   assert.equal(surprisePct("$90.70B", "$90.61–90.69B").toFixed(2), "0.06");
   assert.equal(surpriseLine(0.3), "➖ 持平 +0.3%");
   assert.equal(surpriseLine(-2), "❌ -2.0%");
+  assert.equal(surpriseLine(9.9, 1.7), "✅ +1.7%~+9.9%");
   assert.equal(sessionLabel("2026-11-03T15:00:00Z"), "盘中");
 });
 
