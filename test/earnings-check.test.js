@@ -57,7 +57,7 @@ test("recognises a 6-K results release but not monthly sales", () => {
   assert.equal(sec.looksLikeResults("TSMC September 2026 Revenue Report. Net revenue for September"), false);
 });
 
-const release = "Total revenue was $29,594 million, up 22% year over year. GAAP diluted EPS was $2.01; non-GAAP diluted EPS was $3.32.";
+const release = "Total revenue was $29,594 million, up 22% year over year. GAAP diluted EPS was $2.01; non-GAAP diluted EPS was $3.32. We expect fourth quarter revenue of approximately $34.8 billion.";
 const seenUrls = new Set(["https://www.reuters.com/a", "https://www.cnbc.com/b"]);
 const metric = (actual, quote, consensus) => ({
   actual,
@@ -75,15 +75,22 @@ const good = {
   report_date: "2026-09-02",
   revenue: metric("$29.59B", "Total revenue was $29,594 million", "$29.3B"),
   eps: metric("$3.32", "non-GAAP diluted EPS was $3.32", "$3.22"),
-  market_reaction: "盘后下跌约 4%",
+  verdict: "mixed",
+  headline: "双超预期，但指引略弱",
+  summary: "AI 业务继续高增长，但下季营收指引略低于预期",
+  eps_label: "调整后 EPS",
+  guidance: {
+    label: "Q4 营收指引",
+    value: "$34.8B",
+    value_quote: "fourth quarter revenue of approximately $34.8 billion",
+    consensus: "$35.05B",
+    consensus_sources: ["https://www.cnbc.com/b"]
+  },
+  market_reaction: "盘后 -4%",
   market_reaction_source: "https://www.cnbc.com/b",
+  highlights: ["AI 半导体营收 $16.7B，同比 +221%", "留意：高预期下指引略弱"],
   conflicts: [],
-  message: [
-    "🟡 Broadcom（AVGO）Q3 FY26 财报速览｜2026-09-02",
-    "• 营收 $29.59B vs 市场目标约 $29.3B：Beat 约 +1%",
-    "• 调整后 EPS $3.32 vs $3.22：Beat +3.1%",
-    "📉 市场反应：盘后下跌约 4%"
-  ].join("\n")
+  minor_differences: []
 };
 
 test("accepts a report whose figures and sources trace back", () => {
@@ -100,22 +107,28 @@ test("blocks figures, targets and reactions that cannot be traced", () => {
   };
   const problems = checkReport(bad, { ticker: "AVGO", releaseText: release, seenUrls });
   assert.equal(problems.length, 4);
-  assert.match(problems.join("\n"), /revenue\.actual_quote is not in the release/);
+  assert.match(problems.join("\n"), /revenue quote is not in the release/);
   assert.match(problems.join("\n"), /eps consensus has no source/);
   assert.match(problems.join("\n"), /market reaction has no source/);
   assert.match(problems.join("\n"), /conflict: Reuters and CNBC/);
 });
 
-test("requires 公司指引目标 when the target is company guidance", () => {
-  const report = { ...good, revenue: { ...good.revenue, consensus_basis: "company_guidance", consensus_sources: [] } };
-  assert.match(checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }).join(), /公司指引目标/);
-  report.message = report.message.replace("市场目标", "公司指引目标");
-  assert.deepEqual(checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }), []);
+test("keeps the card text short", () => {
+  const problems = checkReport(
+    { ...good, headline: "这是一条远远超过二十个字的标题，读者根本看不完它", highlights: ["a", "b", "c", "d"] },
+    { ticker: "AVGO", releaseText: release, seenUrls }
+  );
+  assert.match(problems.join("\n"), /headline must be/);
+  assert.match(problems.join("\n"), /one to three highlights/);
 });
 
-test("rejects messages over the Discord budget", () => {
-  const report = { ...good, message: `AVGO ${"字".repeat(1700)}` };
-  assert.match(checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }).join(), /limit 1700/);
+test("checks guidance against the release and its sources", () => {
+  const report = { ...good, guidance: { ...good.guidance, value: "$38.4B", consensus_sources: ["https://example.com/x"] } };
+  const problems = checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }).join("\n");
+  assert.match(problems, /guidance \$38\.4B does not match the release quote/);
+  assert.match(problems, /guidance consensus has no source/);
+  const none = { ...good, guidance: { label: "", value: "", value_quote: "", consensus: "", consensus_sources: [] } };
+  assert.deepEqual(checkReport(none, { ticker: "AVGO", releaseText: release, seenUrls }), []);
 });
 
 test("treats empty workflow inputs as unset", () => {
@@ -183,24 +196,57 @@ test("matches a figure to its quote only up to rounding", () => {
   assert.equal(figureMatchesQuote("$3.23", "non-GAAP diluted EPS was $3.32"), false);
 });
 
-test("blocks a message whose figures differ from the checked fields", () => {
-  const problems = checkReport(
-    { ...good, message: good.message.replace("$29.59B", "$29.95B").replace("$3.22", "$3.12") },
-    { ticker: "AVGO", releaseText: release, seenUrls }
-  );
-  assert.match(problems.join("\n"), /revenue \$29\.59B is not the figure in the message/);
-  assert.match(problems.join("\n"), /eps target \$3\.22 is not the figure in the message/);
-
+test("blocks a figure that differs from its release quote", () => {
   const mismatch = { ...good, revenue: { ...good.revenue, actual: "$29.95B" } };
-  mismatch.message = good.message.replace("$29.59B", "$29.95B");
   assert.match(checkReport(mismatch, { ticker: "AVGO", releaseText: release, seenUrls }).join(), /does not match the release quote/);
 });
 
-test("blocks a market reaction line that has no recorded source", () => {
-  const report = { ...good, market_reaction: "", market_reaction_source: "" };
-  assert.match(checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }).join(), /mentions a market reaction/);
-  report.message = good.message.split("\n").slice(0, 3).join("\n");
-  assert.deepEqual(checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls }), []);
+const { renderCard, cardToText, surprisePct, surpriseLine, sessionLabel } = require("../src/card");
+
+test("lays out the card with computed surprises", () => {
+  const card = renderCard(good, {
+    filing: { form: "8-K", acceptedAt: "2026-09-02T20:10:00Z" },
+    releaseUrls: ["https://www.sec.gov/Archives/edgar/data/1/2/ex99.htm"]
+  });
+  assert.equal(card.color, 0xf1c40f);
+  assert.equal(card.author.name, "AVGO · Q3 FY26 · 2026-09-02 盘后");
+  assert.equal(card.title, "Broadcom：双超预期，但指引略弱");
+  assert.deepEqual(card.fields.slice(0, 3).map((field) => field.value), [
+    "**$29.59B**\n预期 $29.3B\n✅ +1.0%",
+    "**$3.32**\n预期 $3.22\n✅ +3.1%",
+    "**$34.8B**\n预期 $35.05B\n❌ -0.7%"
+  ]);
+  assert.equal(card.fields[3].value, "📉 盘后 -4%");
+  assert.match(card.fields[4].value, /^· AI 半导体营收/);
+  assert.equal(card.footer.text, "来源：SEC 8-K · 预期 reuters.com / cnbc.com");
+  const ranged = renderCard({ ...good, revenue: { ...good.revenue, consensus: "$29.0–29.3B" } }, { filing: { form: "8-K", acceptedAt: "2026-09-02T20:10:00Z" }, releaseUrls: [] });
+  assert.equal(ranged.fields[0].value, "**$29.59B**\n预期 $29.0–29.3B\n✅ +1.0%~+2.0%");
+  assert.match(cardToText(card), /\[营收\] \$29\.59B \| 预期 \$29\.3B \| ✅ \+1\.0%/);
+});
+
+test("labels targets that are not market consensus", () => {
+  const report = {
+    ...good,
+    revenue: { ...good.revenue, consensus_basis: "company_guidance" },
+    eps: { ...good.eps, consensus: "", consensus_basis: "unavailable", consensus_sources: [] },
+    guidance: { label: "", value: "", value_quote: "", consensus: "", consensus_sources: [] },
+    market_reaction: ""
+  };
+  const card = renderCard(report, { filing: { form: "8-K", acceptedAt: "2026-09-02T11:00:00Z" }, releaseUrls: [] });
+  assert.equal(card.fields[0].value, "**$29.59B**\n公司指引 $29.3B\n✅ +1.0%");
+  assert.equal(card.fields[1].value, "**$3.32**\n无可比预期");
+  assert.deepEqual(card.fields[2], { name: "指引", value: "未给出数字指引", inline: true });
+  assert.equal(card.fields[3].name, "看点");
+  assert.match(card.author.name, /盘前$/);
+});
+
+test("computes surprises against ranges and calls small ones in line", () => {
+  assert.equal(surprisePct("$3.9–4.0B", "$3.6B").toFixed(1), "9.7");
+  assert.equal(surprisePct("$90.70B", "$90.61–90.69B").toFixed(2), "0.06");
+  assert.equal(surpriseLine(0.3), "➖ 持平 +0.3%");
+  assert.equal(surpriseLine(-2), "❌ -2.0%");
+  assert.equal(surpriseLine(9.9, 1.7), "✅ +1.7%~+9.9%");
+  assert.equal(sessionLabel("2026-11-03T15:00:00Z"), "盘中");
 });
 
 const { windowStart, isSettled, recordError } = require("../scripts/check-earnings");
@@ -238,11 +284,7 @@ test("reads a target written as a range", () => {
 });
 
 test("allows a target range unless the figure falls inside it", () => {
-  const ranged = (consensus) => {
-    const report = { ...good, revenue: { ...good.revenue, consensus } };
-    report.message = good.message.replace("$29.3B", consensus);
-    return checkReport(report, { ticker: "AVGO", releaseText: release, seenUrls });
-  };
+  const ranged = (consensus) => checkReport({ ...good, revenue: { ...good.revenue, consensus } }, { ticker: "AVGO", releaseText: release, seenUrls });
   assert.deepEqual(ranged("$29.25–29.35B"), []);
   assert.match(ranged("$29.5–29.7B").join(), /inside the target range/);
 });
