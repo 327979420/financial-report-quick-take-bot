@@ -416,7 +416,23 @@
       "period": "Q3 FY26",
       "reportDate": "2026-11-06",
       "publishedAt": "2026-11-06T18:08:11.403Z"
+    },
+    {
+      "ticker": "TSM",
+      "accession": "0001046179-26-000797",
+      "form": "6-K",
+      "recordedAt": "2026-11-10T18:43:26.871Z",
+      "status": "skipped",
+      "reason": "这份文件是台积电董事会决议公告（季度股息、资本预算、对 Anthropic 和 OpenAI 的投资），不是季度财报发布。文中的 Q3 数据只是董事会批准已公布的财报，Q3 业绩已在 10 月发布。"
+    },
+    {
+      "ticker": "TSM",
+      "accession": "0001046179-26-000796",
+      "form": "6-K",
+      "recordedAt": "2026-11-10T18:43:27.226Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-06T18:07:26.123Z"
+  "checkedThrough": "2026-11-10T18:43:08.514Z"
 }
