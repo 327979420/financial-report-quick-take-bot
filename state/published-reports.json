@@ -442,7 +442,25 @@
       "period": "Q3 FY26",
       "reportDate": "2026-11-10",
       "reason": "conflict: EPS 目标在不同来源间相互矛盾，会改变结论：GAAP 每股亏损 -$1.27 不及 LSEG 的 -$1.16 和 Zacks 的 -$1.17（这两个数字看起来是调整后口径），却优于 247wallst 的 -$1.55。Reuters 报道的调整后每股亏损为 -$0.95，好于 -$1.16，但新闻稿没有列出调整后 EPS。新闻稿中只有调整后净亏损 -$529M 和 559M 股，自行相除约得 -$0.95。; conflict: 据搜索摘要，TheStreet 报道“调整后 EPS $1.27”。但新闻稿中 -$1.27 是 GAAP 摊薄每股亏损，两者矛盾。; eps quote is not in the release: \"Diluted net loss per share | $ | (1.27)\"; guidance $13.0–13.3B does not match the release quote \"We are raising our full year 2026 revenue guidance to a range of $13.0 billion to $13.3 billion.\""
+    },
+    {
+      "ticker": "NBIS",
+      "accession": "0001104659-26-126008",
+      "form": "6-K",
+      "recordedAt": "2026-11-12T19:00:45.133Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-12",
+      "publishedAt": "2026-11-12T19:00:45.133Z"
+    },
+    {
+      "ticker": "TSM",
+      "accession": "0001046179-26-000800",
+      "form": "6-K",
+      "recordedAt": "2026-11-12T19:00:45.346Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-11T00:06:35.374Z"
+  "checkedThrough": "2026-11-12T18:59:50.537Z"
 }
