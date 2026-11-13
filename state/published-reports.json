@@ -460,7 +460,35 @@
       "recordedAt": "2026-11-12T19:00:45.346Z",
       "status": "skipped",
       "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "AMAT",
+      "accession": "0001628280-26-073360",
+      "form": "8-K",
+      "recordedAt": "2026-11-13T00:35:21.028Z",
+      "status": "blocked",
+      "period": "Q4 FY26",
+      "reportDate": "2026-11-12",
+      "reason": "guidance $10.6–11.6B does not match the release quote \"Total revenue | $ | 11,100 | +/- | $ | 500\""
+    },
+    {
+      "ticker": "CSCO",
+      "accession": "0000858877-26-000170",
+      "form": "8-K",
+      "recordedAt": "2026-11-13T00:36:10.519Z",
+      "status": "blocked",
+      "period": "Q1 FY27",
+      "reportDate": "2026-11-12",
+      "reason": "guidance $18.0–18.2B does not match the release quote \"Revenue: $18.0 billion to $18.2 billion\""
+    },
+    {
+      "ticker": "NBIS",
+      "accession": "0001104659-26-126238",
+      "form": "6-K",
+      "recordedAt": "2026-11-13T00:36:11.228Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-12T18:59:50.537Z"
+  "checkedThrough": "2026-11-13T00:34:32.986Z"
 }
