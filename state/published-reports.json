@@ -496,7 +496,15 @@
       "recordedAt": "2026-11-13T18:36:21.771Z",
       "status": "skipped",
       "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-461909",
+      "form": "6-K",
+      "recordedAt": "2026-11-16T21:06:46.805Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-13T18:36:03.995Z"
+  "checkedThrough": "2026-11-16T21:06:36.552Z"
 }
