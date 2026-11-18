@@ -28,7 +28,7 @@ Revenue and EPS against expectations, margins, free cash flow, balance-sheet pos
 
 **New filing on SEC EDGAR → Claude reads the release and checks consensus → automatic checks → Discord**
 
-A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on US trading days. It looks for new earnings releases (8-K item 2.02, or 6-K results for foreign issuers) from every company in the [watchlist](config/watchlist.json), then:
+The [earnings check](.github/workflows/earnings-check.yml) runs every 20 minutes on US trading days (11:05–23:45 UTC). A small [Cloudflare Worker](scheduler/worker.mjs) starts it on time, because GitHub's own schedule is best effort and in November 2026 fired only one or two of its thirteen hourly runs a day; that schedule stays in the workflow as a backup. It looks for new earnings releases (8-K item 2.02, or 6-K results for foreign issuers) from every company in the [watchlist](config/watchlist.json), then:
 
 1. Reads the press release straight from the filing.
 2. Asks Claude Code (headless, with web search) for the card's fields in Chinese: a short verdict, revenue / EPS / guidance against expectations, any real after-hours move, and up to three highlights.
@@ -37,7 +37,7 @@ A [scheduled GitHub Action](.github/workflows/earnings-check.yml) runs hourly on
 
 A blocked report fails the run (GitHub emails the owner) and is not retried; to publish it after checking, run the workflow by hand with its `accession` and dry run off. Other errors (SEC or Claude Code failing) are retried on the next runs, up to three attempts.
 
-Each run starts new filings for 20 minutes at most; anything left over is handled by the next hourly run. The check looks back at least 48 hours, and further back to the last run that finished everything, so filings from late Friday are still found on Monday.
+Each run starts new filings for 20 minutes at most; anything left over is handled by the next run. The check looks back at least 48 hours, and further back to the last run that finished everything, so filings from late Friday are still found on Monday.
 
 **Which companies.** The [watchlist](config/watchlist.json) follows where the money is: the 60 most traded US-listed stocks by trading value (last price × shares traded) from Nasdaq's free stock screener, refreshed weekly inside the same workflow, plus a few pinned names that are always covered. A name already on the list stays while it is still in the top 90, so the list does not churn on one quiet day. ETFs and funds are excluded because they do not report earnings.
 
@@ -59,3 +59,14 @@ node scripts/check-earnings.js --dry-run --accession <accession number>
 The original JSON formatter still works for hand-made summaries (`npm run demo`), and the [manual publishing workflow](.github/workflows/publish-report.yml) can send a prepared message.
 
 For information and discussion, not investment advice.
+
+## Scheduler (Cloudflare)
+
+`scheduler/` holds the Worker `earnings-check-scheduler`. It only asks GitHub to run the workflow with dry run off; it reads no data and posts nothing. It needs one secret, a fine-grained GitHub token limited to this repository with **Actions: Read and write**:
+
+```bash
+npx wrangler@4.92.0 secret put GITHUB_ACTIONS_TOKEN --config scheduler/wrangler.jsonc
+npx wrangler@4.92.0 deploy --config scheduler/wrangler.jsonc
+```
+
+Runs it started appear in Actions as `workflow_dispatch`; dispatch errors show in the Worker's Cloudflare logs.
