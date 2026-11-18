@@ -40,7 +40,9 @@ export async function dispatchCheck(env, fetchImpl = fetch) {
   );
   if (!response.ok) {
     const requestId = response.headers.get("x-github-request-id");
-    throw new Error(`GitHub workflow dispatch failed with HTTP ${response.status}${requestId ? ` (request ${requestId})` : ""}`);
+    // GitHub's message (e.g. "Resource not accessible by personal access token") says what is wrong; it holds no secrets.
+    const detail = (await response.text().catch(() => "")).slice(0, 300);
+    throw new Error(`GitHub workflow dispatch failed with HTTP ${response.status}${requestId ? ` (request ${requestId})` : ""}: ${detail}`);
   }
   return { dispatched: true, status: response.status };
 }
