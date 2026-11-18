@@ -1,0 +1,20 @@
+{
+  // Deploy: npx wrangler@4.92.0 deploy --config scheduler/wrangler.jsonc
+  // Token:  npx wrangler@4.92.0 secret put GITHUB_ACTIONS_TOKEN --config scheduler/wrangler.jsonc
+  //         (fine-grained GitHub token, this repository only, Actions: Read and write)
+  "name": "earnings-check-scheduler",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "triggers": {
+    // Every 20 minutes, 11:05-23:45 UTC, Monday to Friday. Must match CRON in worker.mjs.
+    "crons": ["5,25,45 11-23 * * 1-5"]
+  },
+  "vars": {
+    "GITHUB_OWNER": "327979420",
+    "GITHUB_REPO": "financial-report-quick-take-bot",
+    "GITHUB_REF": "main",
+    "WORKFLOW": "earnings-check.yml"
+  },
+  "observability": { "enabled": true }
+}
