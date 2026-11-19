@@ -549,11 +549,12 @@
       "ticker": "WMT",
       "accession": "0000104169-26-000168",
       "form": "8-K",
-      "recordedAt": "2026-11-19T12:05:57.460Z",
-      "status": "error",
-      "attempts": 1,
-      "reason": "SEC returned HTTP 404 for https://www.sec.gov/Archives/edgar/data/104169/000010416926000168/index.json"
+      "recordedAt": "2026-11-19T12:26:54.456Z",
+      "status": "published",
+      "period": "Q3 FY27",
+      "reportDate": "2026-11-19",
+      "publishedAt": "2026-11-19T12:26:54.456Z"
     }
   ],
-  "checkedThrough": "2026-11-19T01:54:56.387Z"
+  "checkedThrough": "2026-11-19T12:25:45.753Z"
 }
