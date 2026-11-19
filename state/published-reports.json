@@ -544,6 +544,15 @@
       "period": "Q3 FY26",
       "reportDate": "2026-11-17",
       "publishedAt": "2026-11-19T01:56:29.122Z"
+    },
+    {
+      "ticker": "WMT",
+      "accession": "0000104169-26-000168",
+      "form": "8-K",
+      "recordedAt": "2026-11-19T12:05:57.460Z",
+      "status": "error",
+      "attempts": 1,
+      "reason": "SEC returned HTTP 404 for https://www.sec.gov/Archives/edgar/data/104169/000010416926000168/index.json"
     }
   ],
   "checkedThrough": "2026-11-19T01:54:56.387Z"
