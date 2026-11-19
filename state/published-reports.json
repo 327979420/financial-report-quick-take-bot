@@ -524,7 +524,27 @@
       "period": "Q1 FY27",
       "reportDate": "2026-11-18",
       "reason": "guidance $3.53–3.55B does not match the release quote \"Total revenue in the range of $3.530 billion to $3.550 billion, representing year-over-year growth of 36% to 37%.\""
+    },
+    {
+      "ticker": "DIS",
+      "accession": "0001744489-26-000065",
+      "form": "8-K",
+      "recordedAt": "2026-11-19T01:55:43.208Z",
+      "status": "published",
+      "period": "Q4 FY26",
+      "reportDate": "2026-11-17",
+      "publishedAt": "2026-11-19T01:55:43.208Z"
+    },
+    {
+      "ticker": "HD",
+      "accession": "0000354950-26-000184",
+      "form": "8-K",
+      "recordedAt": "2026-11-19T01:56:29.122Z",
+      "status": "published",
+      "period": "Q3 FY26",
+      "reportDate": "2026-11-17",
+      "publishedAt": "2026-11-19T01:56:29.122Z"
     }
   ],
-  "checkedThrough": "2026-11-18T21:45:48.310Z"
+  "checkedThrough": "2026-11-19T01:54:56.387Z"
 }
