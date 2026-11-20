@@ -554,7 +554,15 @@
       "period": "Q3 FY27",
       "reportDate": "2026-11-19",
       "publishedAt": "2026-11-19T12:26:54.456Z"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-469266",
+      "form": "6-K",
+      "recordedAt": "2026-11-20T19:10:04.613Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-19T12:25:45.753Z"
+  "checkedThrough": "2026-11-20T19:09:54.721Z"
 }
