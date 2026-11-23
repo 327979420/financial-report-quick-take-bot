@@ -572,7 +572,15 @@
       "period": "Q3 FY27",
       "reportDate": "2026-11-23",
       "reason": "guidance $1.638–1.644B does not match the release quote \"Total revenue | $1,638.1 - $1,644.1 million\""
+    },
+    {
+      "ticker": "ARM",
+      "accession": "0001973239-26-000155",
+      "form": "6-K",
+      "recordedAt": "2026-11-23T17:25:57.472Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-23T11:05:45.667Z"
+  "checkedThrough": "2026-11-23T17:25:47.645Z"
 }
