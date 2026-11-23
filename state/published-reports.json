@@ -562,7 +562,17 @@
       "recordedAt": "2026-11-20T19:10:04.613Z",
       "status": "skipped",
       "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "CRWD",
+      "accession": "0001535527-26-000035",
+      "form": "8-K",
+      "recordedAt": "2026-11-23T11:06:50.649Z",
+      "status": "blocked",
+      "period": "Q3 FY27",
+      "reportDate": "2026-11-23",
+      "reason": "guidance $1.638–1.644B does not match the release quote \"Total revenue | $1,638.1 - $1,644.1 million\""
     }
   ],
-  "checkedThrough": "2026-11-20T19:09:54.721Z"
+  "checkedThrough": "2026-11-23T11:05:45.667Z"
 }
