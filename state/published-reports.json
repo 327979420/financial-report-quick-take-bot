@@ -585,9 +585,9 @@
       "ticker": "ADI",
       "accession": "0000006281-26-000087",
       "form": "8-K",
-      "recordedAt": "2026-11-24T12:05:55.269Z",
+      "recordedAt": "2026-11-24T12:26:09.795Z",
       "status": "error",
-      "attempts": 1,
+      "attempts": 2,
       "reason": "SEC returned HTTP 404 for https://www.sec.gov/Archives/edgar/data/6281/000000628126000087/index.json"
     }
   ],
