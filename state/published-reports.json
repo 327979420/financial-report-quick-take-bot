@@ -580,6 +580,15 @@
       "recordedAt": "2026-11-23T17:25:57.472Z",
       "status": "skipped",
       "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "ADI",
+      "accession": "0000006281-26-000087",
+      "form": "8-K",
+      "recordedAt": "2026-11-24T12:05:55.269Z",
+      "status": "error",
+      "attempts": 1,
+      "reason": "SEC returned HTTP 404 for https://www.sec.gov/Archives/edgar/data/6281/000000628126000087/index.json"
     }
   ],
   "checkedThrough": "2026-11-23T17:25:47.645Z"
