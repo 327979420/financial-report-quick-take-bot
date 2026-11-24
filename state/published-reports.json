@@ -589,7 +589,17 @@
       "status": "error",
       "attempts": 3,
       "reason": "SEC returned HTTP 404 for https://www.sec.gov/Archives/edgar/data/6281/000000628126000087/index.json"
+    },
+    {
+      "ticker": "DELL",
+      "accession": "0001571996-26-000050",
+      "form": "8-K",
+      "recordedAt": "2026-11-24T21:23:42.180Z",
+      "status": "published",
+      "period": "Q3 FY27",
+      "reportDate": "2026-11-24",
+      "publishedAt": "2026-11-24T21:23:42.180Z"
     }
   ],
-  "checkedThrough": "2026-11-24T12:45:46.036Z"
+  "checkedThrough": "2026-11-24T21:22:42.855Z"
 }
