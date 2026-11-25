@@ -599,7 +599,23 @@
       "period": "Q3 FY27",
       "reportDate": "2026-11-24",
       "publishedAt": "2026-11-24T21:23:42.180Z"
+    },
+    {
+      "ticker": "TSM",
+      "accession": "0001046179-26-000807",
+      "form": "6-K",
+      "recordedAt": "2026-11-25T11:26:06.910Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
+    },
+    {
+      "ticker": "TSM",
+      "accession": "0001046179-26-000805",
+      "form": "6-K",
+      "recordedAt": "2026-11-25T11:26:07.211Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-24T21:22:42.855Z"
+  "checkedThrough": "2026-11-25T11:25:57.128Z"
 }
