@@ -623,7 +623,15 @@
       "recordedAt": "2026-11-25T13:06:04.380Z",
       "status": "skipped",
       "reason": "该文件是2026年企业价值提升（Value-up）进展及股东回报计划，不是季度或年度财报。"
+    },
+    {
+      "ticker": "SKHY",
+      "accession": "0001193125-26-479067",
+      "form": "6-K",
+      "recordedAt": "2026-11-27T20:03:38.137Z",
+      "status": "skipped",
+      "reason": "6-K without quarterly results"
     }
   ],
-  "checkedThrough": "2026-11-25T13:05:48.190Z"
+  "checkedThrough": "2026-11-27T20:03:28.303Z"
 }
